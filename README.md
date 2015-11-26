@@ -1,8 +1,3 @@
----
-title: ASDF
-layout: default
----
-
 # Java Image Recognition Sample
 
 Sample Java Project to show use of OpenCV and Akaze algorithm to run
