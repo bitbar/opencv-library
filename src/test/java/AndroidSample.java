@@ -5,7 +5,11 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 import org.openqa.selenium.By;
 import org.slf4j.LoggerFactory;
+
+import io.appium.java_client.remote.HideKeyboardStrategy;
+
 import java.util.concurrent.TimeUnit;
+
 
 /**
  * Testdroid Image Recognition Sample Test
@@ -49,11 +53,8 @@ public class AndroidSample extends TestdroidImageRecognition {
         driver.manage().timeouts().implicitlyWait(60, TimeUnit.SECONDS);
         log("Image Recognition sample script started.");
         takeScreenshot("Before hideKeyboard");
-        try {
-          driver.hideKeyboard();
-        } catch (Exception e) {
-          log("Keyboard not present; going forward.");
-        }
+        
+        AppiumCommons.hideKeyboard(driver);
 
         findImageOnScreen("bitbar_logo");
         log("Success.");
