@@ -248,41 +248,10 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
     public Point[] findImageOnScreen(String image, int retries, int retryWait, double tolerance, boolean withAssert, boolean takeScreenshot) throws Exception {
         return findImageOnScreen(image, retries, retryWait, tolerance, withAssert, takeScreenshot, DEFAULT_CROP);
     }
-
-    public Point[] findImageOnScreen(String image, int retries, int retryWait, double tolerance, boolean withAssert) throws Exception {
-        return findImageOnScreen(image, retries, retryWait, tolerance, withAssert, DEFAULT_TAKE_SCREENSHOT, DEFAULT_CROP);
-    }
-
-    public Point[] findImageOnScreen(String image, int retries, int retryWait, double tolerance) throws Exception {
-        return findImageOnScreen(image, retries, retryWait, tolerance, DEFAULT_WITH_ASSERT, DEFAULT_TAKE_SCREENSHOT, DEFAULT_CROP);
-    }
-
-    public Point[] findImageOnScreen(String image, int retries, int retryWait) throws Exception {
-        return findImageOnScreen(image, retries, retryWait, DEFAULT_TOLERANCE, DEFAULT_WITH_ASSERT, DEFAULT_TAKE_SCREENSHOT, DEFAULT_CROP);
-    }
-
-    public Point[] findImageOnScreen(String image, int retries) throws Exception {
-        return findImageOnScreen(image, retries, DEFAULT_RETRY_WAIT, DEFAULT_TOLERANCE, DEFAULT_WITH_ASSERT, DEFAULT_TAKE_SCREENSHOT, DEFAULT_CROP);
-    }
-
+    
+    
     public Point[] findImageOnScreen(String image) throws Exception {
-        return findImageOnScreen(image, DEFAULT_RETRIES);
-    }
-
-    public Point[] findImageOnScreenNoAssert(String image, int retries, int retryWait, double tolerance) throws Exception {
-        return findImageOnScreen(image, retries, retryWait, tolerance, false, DEFAULT_TAKE_SCREENSHOT, DEFAULT_CROP);
-    }
-
-    public Point[] findImageOnScreenNoAssert(String image, int retries, int retryWait) throws Exception {
-        return findImageOnScreenNoAssert(image, retries, retryWait, DEFAULT_TOLERANCE);
-    }
-
-    public Point[] findImageOnScreenNoAssert(String image, int retries) throws Exception {
-        return findImageOnScreenNoAssert(image, retries, DEFAULT_RETRY_WAIT, DEFAULT_TOLERANCE);
-    }
-
-    public Point[] findImageOnScreenNoAssert(String image) throws Exception {
-        return findImageOnScreenNoAssert(image, DEFAULT_RETRIES, DEFAULT_RETRY_WAIT, DEFAULT_TOLERANCE);
+        return findImageOnScreen(image, DEFAULT_RETRIES, DEFAULT_RETRY_WAIT, DEFAULT_TOLERANCE, DEFAULT_WITH_ASSERT, DEFAULT_TAKE_SCREENSHOT, DEFAULT_CROP);
     }
 
     public Point[] findImageOnScreen(String image, boolean take_screenshot) throws Exception {

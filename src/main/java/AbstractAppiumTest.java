@@ -33,10 +33,6 @@ public abstract class AbstractAppiumTest {
     protected static AppiumDriver<MobileElement> driver;
     protected static int defaultWaitTime = 120;
 
-    private static int counter = 0;
-    private static int retry_counter = 1;
-    public static String searchedImage;
-
     public static String screenshotsFolder = "";
     public static String appFile = System.getenv("APP_FILE");
     public static String platformName = System.getenv("PLATFORM_NAME");
@@ -132,27 +128,23 @@ public abstract class AbstractAppiumTest {
         return driver;
     }
 
-    public static void takeScreenshot(String screenshotName) throws Exception {
-        takeScreenshot(screenshotName, true);
-    }
-
-    public static void takeScreenshot(String screenshotName, boolean new_step) throws IOException, InterruptedException {
+    public static void takeScreenshot(String screenshotName) throws IOException, InterruptedException {
       if (idevicescreenshotExists) {
         // Keep Appium session alive between multiple non-driver screenshots
         driver.manage().window().getSize();
       }
       timeDifferenceStartTest = (int) ((System.nanoTime() - startTime) / 1e6 / 1000);
       long start_time = System.nanoTime();
-
-      if (new_step) {
-          counter = counter + 1;
-          retry_counter = 1;
-      } else {
-          retry_counter = retry_counter + 1;
-      }
-
-      searchedImage = screenshotsFolder + getScreenshotsCounter() + "_" + screenshotName + getRetryCounter() + "_" + timeDifferenceStartTest + "sec";
-      String fullFileName = System.getProperty("user.dir") + "/" + searchedImage + ".png";
+//
+//      if (new_step) {
+//          counter = counter + 1;
+//          retry_counter = 1;
+//      } else {
+//          retry_counter = retry_counter + 1;
+//      }
+//
+//      searchedImage = screenshotsFolder + getScreenshotsCounter() + "_" + screenshotName + getRetryCounter() + "_" + timeDifferenceStartTest + "sec";
+      String fullFileName = System.getProperty("user.dir") + "/" + screenshotsFolder + screenshotName + ".png";
 
     	if (platformName.equalsIgnoreCase("iOS") && idevicescreenshotExists) {
           String[] cmd = new String[]{"idevicescreenshot", "-u", udid, fullFileName};
@@ -220,28 +212,6 @@ public abstract class AbstractAppiumTest {
             idevicescreenshotExists = false;
         }
         return idevicescreenshotExists;
-    }
-
-    //Will count the screenshots taken for separate stages of the test.
-    public static String getScreenshotsCounter() {
-        if (counter < 100) {
-            if (counter < 10) {
-                return "00" + counter;
-            } else {
-                return "0" + counter;
-            }
-        } else {
-            return Integer.toString(counter);
-        }
-    }
-
-    //Will count the number of times we tried to find the same image. When this counter goes up, the screenshot counter remains the same.
-    static String getRetryCounter() {
-        if (retry_counter < 10) {
-            return "_0" + retry_counter;
-        } else {
-            return "_" + Integer.toString(retry_counter);
-        }
     }
 
     //Stops the script for the given amount of seconds.
