@@ -26,8 +26,6 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
     AkazeImageFinder imageFinder = new AkazeImageFinder();
 
     private String queryimageFolder = "";
-    private static long startTime;
-    long timeDifferenceStartTest;
     public boolean found = false;
 
 
@@ -47,9 +45,7 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
      * ======================================================================================
      */
 
-    public Point[] findImage(String image, String scene) throws Exception {
-        return findImage(image, scene, DEFAULT_TOLERANCE);
-    }
+
 
     //This method calls on the Akaze scripts to find the coordinates of a given image in another image.
     //The "image" parameter is the image that you are searching for
@@ -59,12 +55,11 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
         Point[] imgRect = new Point[0];
         Point[] imgRectScaled;
 
-        // queryImageFolder is "", unless set by setQueryImageFolder()
-        String queryImageFile = "queryimages/" + queryimageFolder + image;
-        log("Searching for " + queryImageFile);
-        log("Searching in " + searchedImage);
+        
+        log("Searching for " + image);
+        log("Searching in " + scene);
         try {
-            imgRect = imageFinder.findImage(queryImageFile, searchedImage, tolerance);
+            imgRect = imageFinder.findImage(image, scene, tolerance);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -222,8 +217,13 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
 
             log("Find image started, retries left: " + retries);
             if (take_screenshot)
-                takeScreenshot(image + "_screenshot", new_step);
-            imgRect = findImage(image, image + "_screenshot" + getRetryCounter() + "_" + timeDifferenceStartTest, tolerance);
+                takeScreenshot(image + "_screenshot");
+            
+            // queryImageFolder is "", unless set by setQueryImageFolder()
+            String queryImageFile = "queryimages/" + queryimageFolder + image + "_screenshot";
+            String screenshotFile = screenshotsFolder+image + "_screenshot";
+            
+            imgRect = findImage(queryImageFile, screenshotFile, tolerance);
             retries = retries - 1;
         }
 
