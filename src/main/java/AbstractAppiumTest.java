@@ -27,8 +27,8 @@ public abstract class AbstractAppiumTest {
     public static final int LONG_SLEEP = 10;
 
     protected static Logger logger = LoggerFactory.getLogger(AbstractAppiumTest.class);
-    private static long timeDifferenceStartTest;
-    private static long startTime;
+
+
 
     protected static AppiumDriver<MobileElement> driver;
     protected static int defaultWaitTime = 120;
@@ -129,58 +129,54 @@ public abstract class AbstractAppiumTest {
     }
 
     public static void takeScreenshot(String screenshotName) throws IOException, InterruptedException {
-      if (idevicescreenshotExists) {
-        // Keep Appium session alive between multiple non-driver screenshots
-        driver.manage().window().getSize();
-      }
-      timeDifferenceStartTest = (int) ((System.nanoTime() - startTime) / 1e6 / 1000);
-      long start_time = System.nanoTime();
-//
-//      if (new_step) {
-//          counter = counter + 1;
-//          retry_counter = 1;
-//      } else {
-//          retry_counter = retry_counter + 1;
-//      }
-//
-//      searchedImage = screenshotsFolder + getScreenshotsCounter() + "_" + screenshotName + getRetryCounter() + "_" + timeDifferenceStartTest + "sec";
-      String fullFileName = System.getProperty("user.dir") + "/" + screenshotsFolder + screenshotName + ".png";
-
-    	if (platformName.equalsIgnoreCase("iOS") && idevicescreenshotExists) {
-          String[] cmd = new String[]{"idevicescreenshot", "-u", udid, fullFileName};
-      		Process p = Runtime.getRuntime().exec(cmd);
-      		BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
-          String line;
-      		while ((line = in.readLine()) != null)
-      			log(line);
-
-      		int exitVal = p.waitFor();
-          if (exitVal != 0) {
-              log("idevicescreenshot process exited with value: " + exitVal);
-          }
-          cmd = new String[]{"sips", "-s", "format", "png", fullFileName, "--out", fullFileName};
-          p = Runtime.getRuntime().exec(cmd);
-          exitVal = p.waitFor();
-          if (exitVal != 0) {
-              log("sips process exited with value: " + exitVal);
-          }
-    	} else {
-            // idevicescreenshot not available, using driver.getScreenshotAs()
-        	File scrFile = driver.getScreenshotAs(OutputType.FILE);
-          try {
-              File testScreenshot = new File(fullFileName);
-              FileUtils.copyFile(scrFile, testScreenshot);
-              logger.info("Screenshot stored to {}", testScreenshot.getAbsolutePath());
-              return;
-          } catch (IOException e) {
-              e.printStackTrace();
-          }
+    	if (idevicescreenshotExists) {
+    		// Keep Appium session alive between multiple non-driver screenshots
+    		driver.manage().window().getSize();
     	}
 
-      long end_time = System.nanoTime();
-      int difference = (int) ((end_time - start_time) / 1e6 / 1000);
-      logger.info("==> Taking a screenshot took " + difference + " secs.");
-    }
+    	long start_time = System.nanoTime();
+    	String fullFileName = System.getProperty("user.dir") + "/" + screenshotsFolder + screenshotName + ".png";
+
+    	if (platformName.equalsIgnoreCase("iOS") && idevicescreenshotExists) {
+    		takeIDeviceScreenshot(fullFileName);
+    	} else {
+    		takeAppiumScreenshot(fullFileName);
+    	}
+    	long end_time = System.nanoTime();
+    	int difference = (int) ((end_time - start_time) / 1e6 / 1000);
+    	logger.info("==> Taking a screenshot took " + difference + " secs.");
+	}
+
+	private static void takeAppiumScreenshot(String fullFileName) {
+		File scrFile = driver.getScreenshotAs(OutputType.FILE);
+		try {
+			File testScreenshot = new File(fullFileName);
+			FileUtils.copyFile(scrFile, testScreenshot);
+			logger.info("Screenshot stored to {}", testScreenshot.getAbsolutePath());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private static void takeIDeviceScreenshot(String fullFileName) throws IOException, InterruptedException {
+		String[] cmd = new String[]{"idevicescreenshot", "-u", udid, fullFileName};
+		Process p = Runtime.getRuntime().exec(cmd);
+		BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		String line;
+		while ((line = in.readLine()) != null)
+			log(line);
+
+		int exitVal = p.waitFor();
+		if (exitVal != 0) {
+			log("idevicescreenshot process exited with value: " + exitVal);
+		}
+		cmd = new String[]{"sips", "-s", "format", "png", fullFileName, "--out", fullFileName};
+		p = Runtime.getRuntime().exec(cmd);
+		exitVal = p.waitFor();
+		if (exitVal != 0) {
+			log("sips process exited with value: " + exitVal);
+		}
+	}
 
     //On a test run on the local machine this method will save the Reports folder in different folders on every test run.
     public static void savePreviousRunReports() {
