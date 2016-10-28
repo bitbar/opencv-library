@@ -56,7 +56,8 @@ public class iOSSample extends TestdroidImageRecognition {
           log("Keyboard not present; going forward.");
         }
 
-        findImageOnScreen("bitbar_logo");
+        findImageOnScreen("bitbar_logo.png");
+//        waitForImageToDisappearFromScreen("bitbar_logo.png");
         log("Success.");
     }
 }

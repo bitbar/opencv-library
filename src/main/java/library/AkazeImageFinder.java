@@ -35,15 +35,11 @@ public class AkazeImageFinder {
         return scene_width;
     }
 
-    public Point[] findImage(String object_filename_nopng, String scene_filename_nopng, double tolerance) {
+    public Point[] findImage(String queryImageFile, String sceneFile, double tolerance) {
 
         long start_time = System.nanoTime();
-
-        String object_filename = object_filename_nopng + ".png";
-        String scene_filename = scene_filename_nopng + ".png";
-
-        Mat img_object = Highgui.imread(object_filename, Highgui.CV_LOAD_IMAGE_UNCHANGED);
-        Mat img_scene = Highgui.imread(scene_filename, Highgui.CV_LOAD_IMAGE_UNCHANGED);
+        Mat img_object = Highgui.imread(queryImageFile, Highgui.CV_LOAD_IMAGE_UNCHANGED);
+        Mat img_scene = Highgui.imread(sceneFile, Highgui.CV_LOAD_IMAGE_UNCHANGED);
 
         Mat resized_img_scene = new Mat();
         scene_height = img_scene.rows();
@@ -59,8 +55,8 @@ public class AkazeImageFinder {
         if (resizeFactor > 1) {
             Size size = new Size(scene_width / resizeFactor, scene_height / resizeFactor);
             resize(img_scene, resized_img_scene, size);
-            Highgui.imwrite(scene_filename, resized_img_scene);
-            img_scene = Highgui.imread(scene_filename, Highgui.CV_LOAD_IMAGE_UNCHANGED);
+            Highgui.imwrite(sceneFile, resized_img_scene);
+            img_scene = Highgui.imread(sceneFile, Highgui.CV_LOAD_IMAGE_UNCHANGED);
             logger.info("Image was resized, resize factor is: " + resizeFactor);
             lastResizeFactor = resizeFactor;
         } else
@@ -68,7 +64,7 @@ public class AkazeImageFinder {
 
         String jsonResults = null;
         try {
-            jsonResults = runAkazeMatch(object_filename, scene_filename);
+            jsonResults = runAkazeMatch(queryImageFile, sceneFile);
         } catch (InterruptedException e) {
             e.printStackTrace();
             return null;
@@ -83,7 +79,7 @@ public class AkazeImageFinder {
         double initial_height = img_object.size().height;
         double initial_width = img_object.size().width;
 
-        Highgui.imwrite(scene_filename, img_scene);
+        Highgui.imwrite(sceneFile, img_scene);
 
         //finding homography
         LinkedList<Point> objList = new LinkedList<Point>();
@@ -133,7 +129,7 @@ public class AkazeImageFinder {
 
         Mat H = Calib3d.findHomography(obj, scene);
 
-        Mat scene_corners = drawFoundHomography(scene_filename_nopng, img_object, scene_filename, H);
+        Mat scene_corners = drawFoundHomography(img_object, sceneFile, H);
         Point top_left = new Point(scene_corners.get(0, 0));
         Point top_right = new Point(scene_corners.get(1, 0));
         Point bottom_left = new Point(scene_corners.get(3, 0));
@@ -242,7 +238,7 @@ public class AkazeImageFinder {
         Highgui.imwrite(scene_filename, croppedImage);
     }
 
-    private Mat drawFoundHomography(String scene_filename_nopng, Mat img_object, String filename, Mat h) {
+    private Mat drawFoundHomography(Mat img_object, String filename, Mat h) {
         Mat obj_corners = new Mat(4, 1, CvType.CV_32FC2);
         Mat scene_corners = new Mat(4, 1, CvType.CV_32FC2);
 
@@ -260,7 +256,6 @@ public class AkazeImageFinder {
         Core.line(img, new Point(scene_corners.get(2, 0)), new Point(scene_corners.get(3, 0)), new Scalar(0, 255, 0), 4);
         Core.line(img, new Point(scene_corners.get(3, 0)), new Point(scene_corners.get(0, 0)), new Scalar(0, 255, 0), 4);
 
-        filename = scene_filename_nopng + ".png";
         Highgui.imwrite(filename, img);
 
         return scene_corners;
