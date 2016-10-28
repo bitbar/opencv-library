@@ -1,5 +1,9 @@
 package library;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
 import org.opencv.core.Point;
 import org.openqa.selenium.Dimension;
 import org.slf4j.Logger;
@@ -85,4 +89,30 @@ public class ImageRecognition {
         }
 	      return null;
     }
+    
+    
+    public static String getTextStringFromImage(String imageInput) {
+		String[] tesseractCommand = {"tesseract", imageInput, "stdout"};
+        String value = "";
+        try {
+            ProcessBuilder p = new ProcessBuilder(tesseractCommand);
+            Process proc = p.start();
+            InputStream stdin = proc.getInputStream();
+            InputStreamReader isr = new InputStreamReader(stdin);
+            BufferedReader br = new BufferedReader(isr);
+            String line;
+            String[] size = null;
+            String[] splitLines;
+            while ((line = br.readLine()) != null) {
+                value += line;
+            }
+
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
+        return value;
+	}
+    
+    
+    
 }

@@ -293,17 +293,7 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
         }
     }
 
-    /**
-     * ======================================================================================
-     * CROP IMAGE
-     * ======================================================================================
-     */
 
-    public void findAndCropImageFromScreen(String image) throws Exception {
-    	ImageRecognitionSettingsDTO settings = new ImageRecognitionSettingsDTO();
-    	settings.setCrop(true);
-    	findImageOnScreen(image, settings);
-    }
 
     /**
      * ======================================================================================
@@ -312,28 +302,16 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
      */
 
     public String grabText(String image) throws Exception {
-        findAndCropImageFromScreen(image);
-        String imageInput = screenshotsFolder + getScreenshotsCounter() + "_" + image + "_screenshot" + getRetryCounter() + "_" + timeDifferenceStartTest + "sec" + ".png";
-        String[] tesseractCommand = {"tesseract", imageInput, "stdout"};
-        String value = "";
-        try {
-            ProcessBuilder p = new ProcessBuilder(tesseractCommand);
-            Process proc = p.start();
-            InputStream stdin = proc.getInputStream();
-            InputStreamReader isr = new InputStreamReader(stdin);
-            BufferedReader br = new BufferedReader(isr);
-            String line;
-            String[] size = null;
-            String[] splitLines;
-            while ((line = br.readLine()) != null) {
-                value += line;
-            }
-
-        } catch (Throwable t) {
-            t.printStackTrace();
-        }
-        return value;
+    	ImageRecognitionSettingsDTO settings = new ImageRecognitionSettingsDTO();
+    	settings.setCrop(true);
+    	ImageSearchDTO imageSearch = findImageOnScreen2(image, settings);
+    	
+        String imageInput = imageSearch.getScreenshotFile();
+        return ImageRecognition.getTextStringFromImage(imageInput);
     }
+
+
+	
 
     /**
      * ======================================================================================
