@@ -6,6 +6,9 @@ import org.openqa.selenium.interactions.touch.TouchActions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import dtos.ImageRecognitionSettingsDTO;
+import dtos.ImageSearchDTO;
+
 import java.io.*;
 
 import static org.junit.Assert.assertNotNull;
@@ -17,12 +20,7 @@ import static org.junit.Assert.fail;
 public class TestdroidImageRecognition extends AbstractAppiumTest {
 
     public Logger logger = LoggerFactory.getLogger(TestdroidImageRecognition.class);
-    private final int DEFAULT_RETRIES = 5;
-    private final int DEFAULT_RETRY_WAIT = 0;
-    private final double DEFAULT_TOLERANCE = 0.6;
-    private final boolean DEFAULT_WITH_ASSERT = true;
-    private final boolean DEFAULT_TAKE_SCREENSHOT = true;
-    private final boolean DEFAULT_CROP = false;
+    
     AkazeImageFinder imageFinder = new AkazeImageFinder();
 
     private String queryimageFolder = "";
@@ -200,62 +198,52 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
     // "image" is the searched image name
     // "retries" is the number of times the method will try to find the searched image. If not set, default is 5.
     // "tolerance" sets the required accuracy for the image recognition algorithm.
-    // "with_assert" specifies if the method will return a fail or not if the searched image is not found on the screen. Use findImageOnScreenNoAssert() to have this set by default to FALSE
-    public Point[] findImageOnScreen(String image, int retries, int retryWait, double tolerance, boolean withAssert, boolean take_screenshot, boolean crop) throws Exception {
-        Point[] imgRect = null;
-        boolean new_step = true;
-        long start_time = System.nanoTime();
-        int originalRetries = retries;
-        while ((retries > 0) && (imgRect == null)) {
-            if (retries < originalRetries) {
-                if (retryWait > 0) {
-                    log("retryWait given, sleeping " + retryWait + " seconds.");
-                    sleep(retryWait);
-                }
-                new_step = false;
-            }
-
-            log("Find image started, retries left: " + retries);
-            if (take_screenshot)
-                takeScreenshot(image + "_screenshot");
-            
-            // queryImageFolder is "", unless set by setQueryImageFolder()
-            String queryImageFile = "queryimages/" + queryimageFolder + image + "_screenshot";
-            String screenshotFile = screenshotsFolder+image + "_screenshot";
-            
-            imgRect = findImage(queryImageFile, screenshotFile, tolerance);
-            retries = retries - 1;
-        }
-
-        long end_time = System.nanoTime();
-        int difference = (int) ((end_time - start_time) / 1e6 / 1000);
-        log("==> Find image took: " + difference + " secs.");
-
-        if (withAssert) {
-            assertNotNull("Image " + image + " not found on screen.", imgRect);
-        }
-
-        if (crop) {
+    public Point[] findImageOnScreen(String image, ImageRecognitionSettingsDTO settings) throws Exception {      
+    	ImageSearchDTO foundImage = findImageLoop(image, settings);
+        if (foundImage.isFound() && settings.isCrop()) {
+        	Point[] imgRect = foundImage.getImageRectangle();
             Point top_left = imgRect[0];
             Point top_right = imgRect[1];
             Point bottom_left = imgRect[2];
             Point center = imgRect[4];
-            imageFinder.cropImage(screenshotsFolder + getScreenshotsCounter() + "_" + image + "_screenshot" + getRetryCounter() + "_" + timeDifferenceStartTest + "sec", top_left.x, top_left.y, top_right.x - top_left.x, bottom_left.y - top_left.y);
+            imageFinder.cropImage(foundImage.getScreenshotFile(), top_left.x, top_left.y, top_right.x - top_left.x, bottom_left.y - top_left.y);
         }
-        return imgRect;
+        return foundImage.getImageRectangle();
     }
 
-    public Point[] findImageOnScreen(String image, int retries, int retryWait, double tolerance, boolean withAssert, boolean takeScreenshot) throws Exception {
-        return findImageOnScreen(image, retries, retryWait, tolerance, withAssert, takeScreenshot, DEFAULT_CROP);
-    }
-    
-    
+	private ImageSearchDTO findImageLoop(String image, ImageRecognitionSettingsDTO settings) throws InterruptedException, IOException, Exception {
+		long start_time = System.nanoTime();
+		ImageSearchDTO foundImageDto = new ImageSearchDTO();
+		for (int i = 0; i < settings.getRetries(); i++) {
+			// queryImageFolder is "", unless set by setQueryImageFolder()
+            String queryImageFile = "queryimages/" + queryimageFolder + image + "_screenshot";
+            String screenshotFile = takeScreenshot(image + "_screenshot");
+            Point[] imgRect = findImage(queryImageFile, screenshotFile, settings.getTolerance());
+            if (imgRect!=null){
+            	long end_time = System.nanoTime();
+                int difference = (int) ((end_time - start_time) / 1e6 / 1000);
+                log("==> Find image took: " + difference + " secs.");
+                
+                foundImageDto.setImageRectangle(imgRect);
+                foundImageDto.setScreenshotFile(screenshotFile);
+                return foundImageDto;
+            }
+            retryWait(settings);
+		}
+		log("==> Image not found");
+		return foundImageDto;
+	}
+
+	private void retryWait(ImageRecognitionSettingsDTO settings) throws InterruptedException {
+		if (settings.getRetryWaitTime() > 0) {
+		    log("retryWait given, sleeping " + settings.getRetryWaitTime() + " seconds.");
+		    sleep(settings.getRetryWaitTime());
+		}
+	}
+
     public Point[] findImageOnScreen(String image) throws Exception {
-        return findImageOnScreen(image, DEFAULT_RETRIES, DEFAULT_RETRY_WAIT, DEFAULT_TOLERANCE, DEFAULT_WITH_ASSERT, DEFAULT_TAKE_SCREENSHOT, DEFAULT_CROP);
-    }
-
-    public Point[] findImageOnScreen(String image, boolean take_screenshot) throws Exception {
-        return findImageOnScreen(image, DEFAULT_RETRIES, DEFAULT_RETRY_WAIT, DEFAULT_TOLERANCE, DEFAULT_WITH_ASSERT, take_screenshot, DEFAULT_CROP);
+    	ImageRecognitionSettingsDTO defaultSettings = new ImageRecognitionSettingsDTO();
+    	return findImageOnScreen(image, defaultSettings);
     }
 
     //Searches for an image until it disappears from the current view. Good for checking if a loading screen has disappeared.

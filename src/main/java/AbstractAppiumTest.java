@@ -128,14 +128,15 @@ public abstract class AbstractAppiumTest {
         return driver;
     }
 
-    public static void takeScreenshot(String screenshotName) throws IOException, InterruptedException {
+    public static String takeScreenshot(String screenshotName) throws IOException, InterruptedException {
     	if (idevicescreenshotExists) {
     		// Keep Appium session alive between multiple non-driver screenshots
     		driver.manage().window().getSize();
     	}
 
     	long start_time = System.nanoTime();
-    	String fullFileName = System.getProperty("user.dir") + "/" + screenshotsFolder + screenshotName + ".png";
+    	String screenshotFile = screenshotsFolder + screenshotName + ".png";
+		String fullFileName = System.getProperty("user.dir") + "/" + screenshotFile;
 
     	if (platformName.equalsIgnoreCase("iOS") && idevicescreenshotExists) {
     		takeIDeviceScreenshot(fullFileName);
@@ -145,6 +146,7 @@ public abstract class AbstractAppiumTest {
     	long end_time = System.nanoTime();
     	int difference = (int) ((end_time - start_time) / 1e6 / 1000);
     	logger.info("==> Taking a screenshot took " + difference + " secs.");
+    	return screenshotFile;
 	}
 
 	private static void takeAppiumScreenshot(String fullFileName) {
