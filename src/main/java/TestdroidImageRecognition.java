@@ -2,9 +2,11 @@ import io.appium.java_client.TouchAction;
 import library.AkazeImageFinder;
 import library.ImageRecognition;
 
+import org.apache.commons.io.FileUtils;
 import org.opencv.core.Point;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
+import org.openqa.selenium.OutputType;
 import org.openqa.selenium.interactions.touch.TouchActions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,44 +107,23 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
     	return findImageOnScreen(image, defaultSettings);
     }
 
-    //Searches for an image until it disappears from the current view. Good for checking if a loading screen has disappeared.
-    public void waitForImageToDisappearFromScreen(String image) throws Exception {
-        boolean first_time = true;
-        boolean check = true;
-        long start, present;
-        start = System.nanoTime();
-        present = start;
-
+    public boolean waitForImageToDisappearFromScreen(String image) throws Exception {
+        long start = System.nanoTime();
         log("==> Trying to find image: " + image);
-
-        while ((check) && ((present - start) / 1e6 / 1000 < 300)) {
-
-            if (first_time) {
-                first_time = false;
-                takeScreenshot(image + "_screenshot", true);
-                if ((findImage(image, image + "_screenshot" + getRetryCounter())) == null) {
-                    log("Loading screen not found. Moving on");
-                    check = false;
-                } else {
-                    sleep(3);
-                }
-            } else {
-                takeScreenshot(image + "_screenshot", false);
-                if ((findImage(image, image + "_screenshot" + getRetryCounter())) == null) {
-                    log("Loading screen not found. Moving on");
-                    check = false;
-                } else {
-                    sleep(3);
-                }
-            }
-
-            present = System.nanoTime();
-
-            if ((present - start) / 1e6 / 1000 >= 300) {
-                fail("Application takes too long to load: Stopping tests.....");
-                check = false;
-            }
+        int retry_counter=0;
+        String queryImageFile = "queryimages/" + queryimageFolder + image;
+        Dimension screenSize = getScreenSizeADB();
+        
+        while (((System.nanoTime() - start) / 1e6 / 1000 < 300)) {
+        	String screenShotFile = takeScreenshot(image + "_screenshot_"+retry_counter);
+			if ((ImageRecognition.findImage(queryImageFile, screenShotFile, platformName, screenSize)) == null) {
+        		log("Image has successfully disappeared from screen.");
+        		return true;
+        	}
+			sleep(3);			
         }
+        logger.warn("Image did not disappear from screen");
+        return false;
     }
 
 
@@ -247,6 +228,59 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
         String text = ImageRecognition.getTextStringFromImage(imageSearch.getScreenshotFile());
 		return text;
     }
+    
+    
+    public String takeScreenshot(String screenshotName) throws IOException, InterruptedException {
+    	if (idevicescreenshotExists) {
+    		// Keep Appium session alive between multiple non-driver screenshots
+    		driver.manage().window().getSize();
+    	}
+
+    	long start_time = System.nanoTime();
+    	String screenshotFile = screenshotsFolder + screenshotName + ".png";
+		String fullFileName = System.getProperty("user.dir") + "/" + screenshotFile;
+
+    	if (platformName.equalsIgnoreCase("iOS") && idevicescreenshotExists) {
+    		takeIDeviceScreenshot(fullFileName);
+    	} else {
+    		takeAppiumScreenshot(fullFileName);
+    	}
+    	long end_time = System.nanoTime();
+    	int difference = (int) ((end_time - start_time) / 1e6 / 1000);
+    	logger.info("==> Taking a screenshot took " + difference + " secs.");
+    	return screenshotFile;
+	}
+
+	private void takeAppiumScreenshot(String fullFileName) {
+		File scrFile = driver.getScreenshotAs(OutputType.FILE);
+		try {
+			File testScreenshot = new File(fullFileName);
+			FileUtils.copyFile(scrFile, testScreenshot);
+			logger.info("Screenshot stored to {}", testScreenshot.getAbsolutePath());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private static void takeIDeviceScreenshot(String fullFileName) throws IOException, InterruptedException {
+		String[] cmd = new String[]{"idevicescreenshot", "-u", udid, fullFileName};
+		Process p = Runtime.getRuntime().exec(cmd);
+		BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		String line;
+		while ((line = in.readLine()) != null)
+			log(line);
+
+		int exitVal = p.waitFor();
+		if (exitVal != 0) {
+			log("idevicescreenshot process exited with value: " + exitVal);
+		}
+		cmd = new String[]{"sips", "-s", "format", "png", fullFileName, "--out", fullFileName};
+		p = Runtime.getRuntime().exec(cmd);
+		exitVal = p.waitFor();
+		if (exitVal != 0) {
+			log("sips process exited with value: " + exitVal);
+		}
+	}
 
 
 	

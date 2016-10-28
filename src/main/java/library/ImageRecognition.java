@@ -21,7 +21,12 @@ public class ImageRecognition {
     }
 	
 	
-	
+    public static Point[] findImage(String image, String scene, String platformName, Dimension screenSize) throws Exception {
+    	ImageRecognitionSettingsDTO setting = new ImageRecognitionSettingsDTO();
+    	return findImage(image, scene, setting, platformName, screenSize);
+    }
+    
+    
     //This method calls on the Akaze scripts to find the coordinates of a given image in another image.
     //The "image" parameter is the image that you are searching for
     //The "scene" parameter is the image in which we are looking for "image"

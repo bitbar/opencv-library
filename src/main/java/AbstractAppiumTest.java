@@ -128,57 +128,7 @@ public abstract class AbstractAppiumTest {
         return driver;
     }
 
-    public static String takeScreenshot(String screenshotName) throws IOException, InterruptedException {
-    	if (idevicescreenshotExists) {
-    		// Keep Appium session alive between multiple non-driver screenshots
-    		driver.manage().window().getSize();
-    	}
 
-    	long start_time = System.nanoTime();
-    	String screenshotFile = screenshotsFolder + screenshotName + ".png";
-		String fullFileName = System.getProperty("user.dir") + "/" + screenshotFile;
-
-    	if (platformName.equalsIgnoreCase("iOS") && idevicescreenshotExists) {
-    		takeIDeviceScreenshot(fullFileName);
-    	} else {
-    		takeAppiumScreenshot(fullFileName);
-    	}
-    	long end_time = System.nanoTime();
-    	int difference = (int) ((end_time - start_time) / 1e6 / 1000);
-    	logger.info("==> Taking a screenshot took " + difference + " secs.");
-    	return screenshotFile;
-	}
-
-	private static void takeAppiumScreenshot(String fullFileName) {
-		File scrFile = driver.getScreenshotAs(OutputType.FILE);
-		try {
-			File testScreenshot = new File(fullFileName);
-			FileUtils.copyFile(scrFile, testScreenshot);
-			logger.info("Screenshot stored to {}", testScreenshot.getAbsolutePath());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	private static void takeIDeviceScreenshot(String fullFileName) throws IOException, InterruptedException {
-		String[] cmd = new String[]{"idevicescreenshot", "-u", udid, fullFileName};
-		Process p = Runtime.getRuntime().exec(cmd);
-		BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
-		String line;
-		while ((line = in.readLine()) != null)
-			log(line);
-
-		int exitVal = p.waitFor();
-		if (exitVal != 0) {
-			log("idevicescreenshot process exited with value: " + exitVal);
-		}
-		cmd = new String[]{"sips", "-s", "format", "png", fullFileName, "--out", fullFileName};
-		p = Runtime.getRuntime().exec(cmd);
-		exitVal = p.waitFor();
-		if (exitVal != 0) {
-			log("sips process exited with value: " + exitVal);
-		}
-	}
 
     //On a test run on the local machine this method will save the Reports folder in different folders on every test run.
     public static void savePreviousRunReports() {
