@@ -54,31 +54,35 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
     }
     
     public ImageSearchDTO findImageOnScreen2(String image, ImageRecognitionSettingsDTO settings) throws Exception {      
-    	ImageSearchDTO foundImage = findImageLoop(image, settings);
+    	ImageSearchDTO foundImage = findImageLoop(image, settings, getScreenSizeADB());
         if (foundImage.isFound() && settings.isCrop()) {
-        	Point[] imgRect = foundImage.getImageRectangle();
-            Point top_left = imgRect[0];
-            Point top_right = imgRect[1];
-            Point bottom_left = imgRect[2];
-            Point center = imgRect[4];
-            imageFinder.cropImage(foundImage.getScreenshotFile(), top_left.x, top_left.y, top_right.x - top_left.x, bottom_left.y - top_left.y);
+        	cropImage(foundImage);
         }
         return foundImage;
     }
 
-	private ImageSearchDTO findImageLoop(String image, ImageRecognitionSettingsDTO settings) throws InterruptedException, IOException, Exception {
+
+	private void cropImage(ImageSearchDTO foundImage) {
+		Point[] imgRect = foundImage.getImageRectangle();
+		Point top_left = imgRect[0];
+		Point top_right = imgRect[1];
+		Point bottom_left = imgRect[2];
+		Point center = imgRect[4];
+		imageFinder.cropImage(foundImage.getScreenshotFile(), top_left.x, top_left.y, top_right.x - top_left.x, bottom_left.y - top_left.y);
+	}
+
+	private ImageSearchDTO findImageLoop(String image, ImageRecognitionSettingsDTO settings, Dimension screenSize) throws InterruptedException, IOException, Exception {
 		long start_time = System.nanoTime();
 		ImageSearchDTO foundImageDto = new ImageSearchDTO();
 		for (int i = 0; i < settings.getRetries(); i++) {
 			// queryImageFolder is "", unless set by setQueryImageFolder()
-            String queryImageFile = "queryimages/" + queryimageFolder + image + "_screenshot";
+            String queryImageFile = "queryimages/" + queryimageFolder + image;
             String screenshotFile = takeScreenshot(image + "_screenshot");
-            Point[] imgRect = ImageRecognition.findImage(queryImageFile, screenshotFile, settings, platformName, getScreenSizeADB());
+            Point[] imgRect = ImageRecognition.findImage(queryImageFile, screenshotFile, settings, platformName, screenSize);
             if (imgRect!=null){
             	long end_time = System.nanoTime();
                 int difference = (int) ((end_time - start_time) / 1e6 / 1000);
                 log("==> Find image took: " + difference + " secs.");
-                
                 foundImageDto.setImageRectangle(imgRect);
                 foundImageDto.setScreenshotFile(screenshotFile);
                 return foundImageDto;
@@ -216,63 +220,6 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
         return false;
     }
 
-    //Uses adb commands to tap at relative coordinates. To be used when appium methods fail. Only works on Android devices.
-    public void tapAtRelativeCoordinatesADB(double x_offset, double y_offset) throws Exception {
-        if (platformName.equalsIgnoreCase("iOS")) {
-            tapAtRelativeCoordinates(x_offset, y_offset);
-        } else {
-            Dimension size = getScreenSizeADB();
-            log("Size of device as seen by ADB is - width: " + size.width + " height: " + size.height);
-            String x = String.valueOf(size.width * x_offset);
-            String y = String.valueOf(size.height * y_offset);
-            log("ADB: x and y: " + x + ", " + y);
-            String[] adbCommand = {"adb", "shell", "input", "tap", x, y};
-//            String[] adbCommand = {"adb", "shell", "input", "touchscreen", "swipe", x, y, x, y, "2000"};
-
-            try {
-                ProcessBuilder p = new ProcessBuilder(adbCommand);
-                Process proc = p.start();
-                InputStream stdin = proc.getInputStream();
-                InputStreamReader isr = new InputStreamReader(stdin);
-                BufferedReader br = new BufferedReader(isr);
-                String line = null;
-                while ((line = br.readLine()) != null)
-                    System.out.print(line);
-
-
-                proc.waitFor();
-
-            } catch (Throwable t) {
-                t.printStackTrace();
-            }
-        }
-    }
-
-    //Uses adb commands to tap at coordinates. To be used when appium methods fail. Only works on Android devices.
-    public void tapAtCoordinatesADB(double x, double y) throws Exception {
-        String[] adbCommand;
-        if (platformName.equalsIgnoreCase("iOS")) {
-            tapAtCoordinates((int) x, (int) y);
-        } else {
-            int Xx = (int) x;
-            int Yy = (int) y;
-            String X = String.valueOf(Xx);
-            String Y = String.valueOf(Yy);
-            log("ADB: X: " + X + ", Y: " + Y);
-//                        String[] adbCommand = {"adb", "shell", "input", "tap", X, Y};
-
-            if (automationName.equalsIgnoreCase("selendroid")) {
-                log("adb_shell_input_tap"); //works for 4.1.x. Will not work for 4.0.x
-                adbCommand = new String[]{"adb", "shell", "input", "tap", X, Y};
-                processBuilder(adbCommand);
-                log("Tap done.");
-            } else {
-                adbCommand = new String[]{"adb", "shell", "input", "touchscreen", "swipe", X, Y, X, Y, "2000"};
-                processBuilder(adbCommand);
-            }
-        }
-    }
-
     public void processBuilder(String[] adbCommand) {
         try {
             found = true;
@@ -293,21 +240,12 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
         }
     }
 
-
-
-    /**
-     * ======================================================================================
-     * TESSERACT GRAB TEXT FROM IMAGE
-     * ======================================================================================
-     */
-
-    public String grabText(String image) throws Exception {
+    public String grabTextFromImage(String image) throws Exception {
     	ImageRecognitionSettingsDTO settings = new ImageRecognitionSettingsDTO();
     	settings.setCrop(true);
     	ImageSearchDTO imageSearch = findImageOnScreen2(image, settings);
-    	
-        String imageInput = imageSearch.getScreenshotFile();
-        return ImageRecognition.getTextStringFromImage(imageInput);
+        String text = ImageRecognition.getTextStringFromImage(imageSearch.getScreenshotFile());
+		return text;
     }
 
 
