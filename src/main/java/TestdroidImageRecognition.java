@@ -1,13 +1,10 @@
-import io.appium.java_client.TouchAction;
 import library.AkazeImageFinder;
 import library.ImageRecognition;
 
 import org.apache.commons.io.FileUtils;
 import org.opencv.core.Point;
-import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.OutputType;
-import org.openqa.selenium.interactions.touch.TouchActions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,8 +13,6 @@ import dtos.ImageSearchDTO;
 
 import java.io.*;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 
 /**
  * Created by testdroid on 22/07/16.
