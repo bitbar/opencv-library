@@ -6,6 +6,8 @@ import org.junit.runners.MethodSorters;
 import org.openqa.selenium.By;
 import org.slf4j.LoggerFactory;
 
+import library.AkazeImageFinder;
+
 /**
  * Testdroid Image Recognition Sample Test
  *

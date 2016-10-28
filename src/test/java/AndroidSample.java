@@ -7,6 +7,7 @@ import org.openqa.selenium.By;
 import org.slf4j.LoggerFactory;
 
 import io.appium.java_client.remote.HideKeyboardStrategy;
+import library.AkazeImageFinder;
 
 import java.util.concurrent.TimeUnit;
 
