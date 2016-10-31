@@ -1,4 +1,9 @@
+import java.io.File;
+import java.io.IOException;
+
+import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.Dimension;
+import org.openqa.selenium.OutputType;
 import org.openqa.selenium.Point;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +22,17 @@ public class AppiumCommons {
             logger.debug(e.toString());
         }
     }
+    
+    public static void takeAppiumScreenshot(AppiumDriver<MobileElement> driver, String fullFileName) {
+		File scrFile = driver.getScreenshotAs(OutputType.FILE);
+		try {
+			File testScreenshot = new File(fullFileName);
+			FileUtils.copyFile(scrFile, testScreenshot);
+			logger.info("Screenshot stored to {}", testScreenshot.getAbsolutePath());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 	
     public static void swipeUp(AppiumDriver<MobileElement> driver) {
         swipeUp(driver, 0.15f, 0.15f);

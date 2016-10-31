@@ -235,10 +235,10 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
     	String screenshotFile = screenshotsFolder + screenshotName + ".png";
 		String fullFileName = System.getProperty("user.dir") + "/" + screenshotFile;
 
-    	if (platformName.equalsIgnoreCase("iOS") && idevicescreenshotExists) {
+    	if (platformName.equalsIgnoreCase("iOS")) {
     		takeIDeviceScreenshot(fullFileName);
     	} else {
-    		takeAppiumScreenshot(fullFileName);
+    		takeAndroidScreenshot(fullFileName);
     	}
     	long end_time = System.nanoTime();
     	int difference = (int) ((end_time - start_time) / 1e6 / 1000);
@@ -246,16 +246,24 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
     	return screenshotFile;
 	}
 
-	private void takeAppiumScreenshot(String fullFileName) {
-		File scrFile = driver.getScreenshotAs(OutputType.FILE);
-		try {
-			File testScreenshot = new File(fullFileName);
-			FileUtils.copyFile(scrFile, testScreenshot);
-			logger.info("Screenshot stored to {}", testScreenshot.getAbsolutePath());
-		} catch (IOException e) {
-			e.printStackTrace();
+	private void takeAndroidScreenshot(String fullFileName) throws IOException, InterruptedException {
+		log("Taking android screenshot...");
+		log(fullFileName);
+		String[] cmd = new String[]{"screenshot2", "-d", fullFileName};
+		Process p = Runtime.getRuntime().exec(cmd);
+		BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		String line;
+		while ((line = in.readLine()) != null)
+			log(line);
+
+		int exitVal = p.waitFor();
+		if (exitVal != 0) {
+			log("screenshot2 process exited with value: " + exitVal);
 		}
 	}
+
+
+	
 
 	private static void takeIDeviceScreenshot(String fullFileName) throws IOException, InterruptedException {
 		String[] cmd = new String[]{"idevicescreenshot", "-u", udid, fullFileName};
