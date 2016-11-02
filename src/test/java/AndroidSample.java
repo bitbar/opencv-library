@@ -51,7 +51,7 @@ public class AndroidSample extends TestdroidImageRecognition {
     public void mainPageTest() throws Exception {
         driver.manage().timeouts().implicitlyWait(60, TimeUnit.SECONDS);
         log("Image Recognition sample script started.");
-        takeScreenshot("Before hideKeyboard");
+//        takeScreenshot("Before hideKeyboard");
         
         AppiumCommons.hideKeyboard(driver);
 

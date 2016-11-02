@@ -1,9 +1,11 @@
 package library;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import org.apache.commons.io.FilenameUtils;
 import org.opencv.core.Point;
 import org.openqa.selenium.Dimension;
 import org.slf4j.Logger;
@@ -11,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 
 import dtos.ImageRecognitionSettingsDTO;
+import dtos.ImageSearchDTO;
 
 public class ImageRecognition {
 
@@ -107,6 +110,32 @@ public class ImageRecognition {
 	private static boolean isPointInsideScreenBounds(Point center, Dimension screenSize) {
 		return !((center.x >= screenSize.width) || (center.x < 0) || (center.y >= screenSize.height) || (center.y < 0));
 	}
+	
+	
+	public static boolean hasImageDissappearedFromScreenBeforeTimeout(String image, String queryImageFolder,
+			String screenshotsFolder, Dimension screenSize, String platformName) throws Exception {
+		log("==> Trying to find image: " + image);
+        int retry_counter=0;
+        long start = System.nanoTime();
+        String queryImageFile = queryImageFolder + image;
+        while (((System.nanoTime() - start) / 1e6 / 1000 < 300)) {
+        	String screenshotName = parseFileName(image) + "_screenshot_"+retry_counter;
+			String screenShotFile = ImageRecognition.takeScreenshot(screenshotName, screenshotsFolder, platformName);
+			if ((findImage(queryImageFile, screenShotFile, platformName, screenSize)) == null) {
+        		log("Image has successfully disappeared from screen.");
+        		return true;
+        	}
+			sleep(3);	
+			retry_counter++;
+        }
+        logger.warn("Image did not disappear from screen");
+        return false;
+	}
+	
+	private static String parseFileName(String imageFile){
+		return FilenameUtils.getBaseName(imageFile);
+	}
+	
     
     
     public static String getTextStringFromImage(String imageInput) {
@@ -130,6 +159,131 @@ public class ImageRecognition {
         }
         return value;
 	}
+    
+    
+    
+    
+    public static ImageSearchDTO findImageOnScreen(String image, String queryImageFolder, String screenshotsFolder, ImageRecognitionSettingsDTO settings, Dimension screenSize, String platformName) throws InterruptedException, IOException, Exception {
+    	ImageSearchDTO foundImageDto = findImageLoop(image, queryImageFolder, screenshotsFolder, settings, screenSize, platformName);
+        if (foundImageDto.isFound() && settings.isCrop()) {
+        	cropImage(foundImageDto);
+        }
+        return foundImageDto;
+    }
+    
+	private static ImageSearchDTO findImageLoop(String image, String queryImageFolder, String screenshotsFolder, ImageRecognitionSettingsDTO settings, Dimension screenSize, String platformName) throws InterruptedException, IOException, Exception {
+		long start_time = System.nanoTime();
+		ImageSearchDTO foundImageDto = new ImageSearchDTO();
+		for (int i = 0; i < settings.getRetries(); i++) {
+			String queryImageFile = queryImageFolder + image;
+            String screenshotFile = takeScreenshot(image + "_screenshot",screenshotsFolder, platformName);
+            Point[] imgRect = ImageRecognition.findImage(queryImageFile, screenshotFile, settings, platformName, screenSize);
+            if (imgRect!=null){
+            	long end_time = System.nanoTime();
+                int difference = (int) ((end_time - start_time) / 1e6 / 1000);
+                log("==> Find image took: " + difference + " secs.");
+                foundImageDto.setImageRectangle(imgRect);
+                foundImageDto.setScreenshotFile(screenshotFile);
+                return foundImageDto;
+            }
+            retryWait(settings);
+		}
+		log("==> Image not found");
+		return foundImageDto;
+	}
+	
+	private static void cropImage(ImageSearchDTO foundImage) {
+		Point[] imgRect = foundImage.getImageRectangle();
+		Point top_left = imgRect[0];
+		Point top_right = imgRect[1];
+		Point bottom_left = imgRect[2];
+		Point center = imgRect[4];
+		imageFinder.cropImage(foundImage.getScreenshotFile(), top_left.x, top_left.y, top_right.x - top_left.x, bottom_left.y - top_left.y);
+	}
+    
+	private static void retryWait(ImageRecognitionSettingsDTO settings) throws InterruptedException {
+		if (settings.getRetryWaitTime() > 0) {
+		    log("retryWait given, sleeping " + settings.getRetryWaitTime() + " seconds.");
+		    sleep(settings.getRetryWaitTime());
+		}
+	}
+	
+    //Stops the script for the given amount of seconds.
+    private static void sleep(int seconds) throws InterruptedException {
+        Thread.sleep(seconds * 1000);
+    }
+    
+    
+    
+    
+    /* TODO
+     *     	if (idevicescreenshotExists) {
+    		// Keep Appium session alive between multiple non-driver screenshots
+    		driver.manage().window().getSize();
+    	}
+
+     */
+    public static String takeScreenshot(String screenshotName, String screenshotsFolder, String platformName) throws Exception {
+    	long start_time = System.nanoTime();
+    	
+    	String screenshotFile = screenshotsFolder + screenshotName + ".png";
+		String fullFileName = System.getProperty("user.dir") + "/" + screenshotFile;
+
+		if (platformName.equalsIgnoreCase("iOS")) {
+    		takeIDeviceScreenshot(fullFileName);
+    	} else if (platformName.equalsIgnoreCase("Android")) {
+    		takeAndroidScreenshot(fullFileName);
+    	} else{
+    		throw new Exception("Invalid platformName: "+platformName);
+    	}
+		
+    	long end_time = System.nanoTime();
+    	int difference = (int) ((end_time - start_time) / 1e6 / 1000);
+    	logger.info("==> Taking a screenshot took " + difference + " secs.");
+    	return screenshotFile;
+	}
+
+
+	private static void takeAndroidScreenshot(String fullFileName) throws IOException, InterruptedException {
+		log("Taking android screenshot...");
+		log(fullFileName);
+		String[] cmd = new String[]{"screenshot2", "-d", fullFileName};
+		Process p = Runtime.getRuntime().exec(cmd);
+		BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		String line;
+		while ((line = in.readLine()) != null)
+			log(line);
+
+		int exitVal = p.waitFor();
+		if (exitVal != 0) {
+			log("screenshot2 process exited with value: " + exitVal);
+		}
+	}
+
+
+	
+
+	private static void takeIDeviceScreenshot(String fullFileName) throws IOException, InterruptedException {
+		String udid = System.getenv("UDID");
+		String[] cmd = new String[]{"idevicescreenshot", "-u", udid, fullFileName};
+		Process p = Runtime.getRuntime().exec(cmd);
+		BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		String line;
+		while ((line = in.readLine()) != null)
+			log(line);
+
+		int exitVal = p.waitFor();
+		if (exitVal != 0) {
+			log("idevicescreenshot process exited with value: " + exitVal);
+		}
+		cmd = new String[]{"sips", "-s", "format", "png", fullFileName, "--out", fullFileName};
+		p = Runtime.getRuntime().exec(cmd);
+		exitVal = p.waitFor();
+		if (exitVal != 0) {
+			log("sips process exited with value: " + exitVal);
+		}
+	}
+
     
     
     

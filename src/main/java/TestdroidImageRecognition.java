@@ -23,7 +23,7 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
     
     AkazeImageFinder imageFinder = new AkazeImageFinder();
 
-    private String queryimageFolder = "";
+    private String queryImageSubFolder = "";
     public boolean found = false;
 
 
@@ -33,7 +33,7 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
         Dimension size = driver.manage().window().getSize();
         log("Screen size: " + size.toString());
         if ((size.getHeight() <= 500) || (size.getWidth() <= 500)) {
-            queryimageFolder = "low_res/";
+            queryImageSubFolder = "low_res/";
         }
     }
 
@@ -43,83 +43,36 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
      * FINDING AN IMAGE ON SCREEN
      * ======================================================================================
      */
-
-
-    public Point[] findImageOnScreen(String image, ImageRecognitionSettingsDTO settings) throws Exception {
-    	ImageSearchDTO dto = findImageOnScreen2(image, settings);
-    	return dto.getImageRectangle();
-    }
     
-    public ImageSearchDTO findImageOnScreen2(String image, ImageRecognitionSettingsDTO settings) throws Exception {      
-    	ImageSearchDTO foundImage = findImageLoop(image, settings, getScreenSizeADB());
-        if (foundImage.isFound() && settings.isCrop()) {
-        	cropImage(foundImage);
-        }
-        return foundImage;
-    }
-
-
-	private void cropImage(ImageSearchDTO foundImage) {
-		Point[] imgRect = foundImage.getImageRectangle();
-		Point top_left = imgRect[0];
-		Point top_right = imgRect[1];
-		Point bottom_left = imgRect[2];
-		Point center = imgRect[4];
-		imageFinder.cropImage(foundImage.getScreenshotFile(), top_left.x, top_left.y, top_right.x - top_left.x, bottom_left.y - top_left.y);
-	}
-
-	private ImageSearchDTO findImageLoop(String image, ImageRecognitionSettingsDTO settings, Dimension screenSize) throws InterruptedException, IOException, Exception {
-		long start_time = System.nanoTime();
-		ImageSearchDTO foundImageDto = new ImageSearchDTO();
-		for (int i = 0; i < settings.getRetries(); i++) {
-			// queryImageFolder is "", unless set by setQueryImageFolder()
-            String queryImageFile = "queryimages/" + queryimageFolder + image;
-            String screenshotFile = takeScreenshot(image + "_screenshot");
-            Point[] imgRect = ImageRecognition.findImage(queryImageFile, screenshotFile, settings, platformName, screenSize);
-            if (imgRect!=null){
-            	long end_time = System.nanoTime();
-                int difference = (int) ((end_time - start_time) / 1e6 / 1000);
-                log("==> Find image took: " + difference + " secs.");
-                foundImageDto.setImageRectangle(imgRect);
-                foundImageDto.setScreenshotFile(screenshotFile);
-                return foundImageDto;
-            }
-            retryWait(settings);
-		}
-		log("==> Image not found");
-		return foundImageDto;
-	}
-
-	private void retryWait(ImageRecognitionSettingsDTO settings) throws InterruptedException {
-		if (settings.getRetryWaitTime() > 0) {
-		    log("retryWait given, sleeping " + settings.getRetryWaitTime() + " seconds.");
-		    sleep(settings.getRetryWaitTime());
-		}
-	}
 
     public Point[] findImageOnScreen(String image) throws Exception {
     	ImageRecognitionSettingsDTO defaultSettings = new ImageRecognitionSettingsDTO();
     	return findImageOnScreen(image, defaultSettings);
     }
-
-    public boolean waitForImageToDisappearFromScreen(String image) throws Exception {
-        long start = System.nanoTime();
-        log("==> Trying to find image: " + image);
-        int retry_counter=0;
-        String queryImageFile = "queryimages/" + queryimageFolder + image;
-        Dimension screenSize = getScreenSizeADB();
-        
-        while (((System.nanoTime() - start) / 1e6 / 1000 < 300)) {
-        	String screenShotFile = takeScreenshot(image + "_screenshot_"+retry_counter);
-			if ((ImageRecognition.findImage(queryImageFile, screenShotFile, platformName, screenSize)) == null) {
-        		log("Image has successfully disappeared from screen.");
-        		return true;
-        	}
-			sleep(3);			
-        }
-        logger.warn("Image did not disappear from screen");
-        return false;
+    
+    public Point[] findImageOnScreen(String image, ImageRecognitionSettingsDTO settings) throws Exception {
+    	ImageSearchDTO dto = findImageOnScreen2(image, settings);
+    	return dto.getImageRectangle();
     }
+    
+    private ImageSearchDTO findImageOnScreen2(String imageName, ImageRecognitionSettingsDTO settings) throws Exception { 
+    	// queryImageFolder is "", unless set by setQueryImageFolder()
+        String queryImageFolder = "queryimages/" + queryImageSubFolder;
+        String screenshotsFolder = "target/reports/screenshots/"; //TODO Severi remove this
+    	ImageSearchDTO foundImage = ImageRecognition.findImageOnScreen(imageName, queryImageFolder, screenshotsFolder, settings, getScreenSizeADB(), platformName);
+        return foundImage;
+    }
+
+    public void waitForImageToDisappearFromScreen(String image) throws Exception {
+        String queryImageFolder = "queryimages/" + queryImageSubFolder; //TODO Severi remove this
+        String screenshotsFolder = "target/reports/screenshots/"; //TODO Severi remove this
+        Dimension screenSize = getScreenSizeADB(); //TODO Severi remove this
+        boolean hasImageDisappeared = ImageRecognition.hasImageDissappearedFromScreenBeforeTimeout(image, queryImageFolder, screenshotsFolder, screenSize, platformName);
+		assert(hasImageDisappeared);
+    }
+
+
+
 
 
     /**
@@ -225,65 +178,6 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
     }
     
     
-    public String takeScreenshot(String screenshotName) throws IOException, InterruptedException {
-    	if (idevicescreenshotExists) {
-    		// Keep Appium session alive between multiple non-driver screenshots
-    		driver.manage().window().getSize();
-    	}
-
-    	long start_time = System.nanoTime();
-    	String screenshotFile = screenshotsFolder + screenshotName + ".png";
-		String fullFileName = System.getProperty("user.dir") + "/" + screenshotFile;
-
-    	if (platformName.equalsIgnoreCase("iOS")) {
-    		takeIDeviceScreenshot(fullFileName);
-    	} else {
-    		takeAndroidScreenshot(fullFileName);
-    	}
-    	long end_time = System.nanoTime();
-    	int difference = (int) ((end_time - start_time) / 1e6 / 1000);
-    	logger.info("==> Taking a screenshot took " + difference + " secs.");
-    	return screenshotFile;
-	}
-
-	private void takeAndroidScreenshot(String fullFileName) throws IOException, InterruptedException {
-		log("Taking android screenshot...");
-		log(fullFileName);
-		String[] cmd = new String[]{"screenshot2", "-d", fullFileName};
-		Process p = Runtime.getRuntime().exec(cmd);
-		BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
-		String line;
-		while ((line = in.readLine()) != null)
-			log(line);
-
-		int exitVal = p.waitFor();
-		if (exitVal != 0) {
-			log("screenshot2 process exited with value: " + exitVal);
-		}
-	}
-
-
-	
-
-	private static void takeIDeviceScreenshot(String fullFileName) throws IOException, InterruptedException {
-		String[] cmd = new String[]{"idevicescreenshot", "-u", udid, fullFileName};
-		Process p = Runtime.getRuntime().exec(cmd);
-		BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
-		String line;
-		while ((line = in.readLine()) != null)
-			log(line);
-
-		int exitVal = p.waitFor();
-		if (exitVal != 0) {
-			log("idevicescreenshot process exited with value: " + exitVal);
-		}
-		cmd = new String[]{"sips", "-s", "format", "png", fullFileName, "--out", fullFileName};
-		p = Runtime.getRuntime().exec(cmd);
-		exitVal = p.waitFor();
-		if (exitVal != 0) {
-			log("sips process exited with value: " + exitVal);
-		}
-	}
 
 
 	

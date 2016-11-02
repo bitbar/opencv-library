@@ -163,11 +163,6 @@ public abstract class AbstractAppiumTest {
     }
 
     //Stops the script for the given amount of seconds.
-    public static void sleep(int seconds) throws InterruptedException {
-        Thread.sleep(seconds * 1000);
-    }
-
-    //Stops the script for the given amount of seconds.
     public static void sleep(double seconds) throws Exception {
         log("Waiting for " + seconds + " sec");
         seconds = seconds * 1000;
