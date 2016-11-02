@@ -41,7 +41,7 @@ public class ImageRecognition {
 
         if (imgRect != null) {
             if (platformName.equalsIgnoreCase("iOS")) {
-                imgRect = scaleImageRectangleForIos(screenSize, imgRect);
+                imgRect = scaleImageRectangleForIos(screenSize, imgRect, scene);
             }
             Point center = imgRect[4];
             if (!isPointInsideScreenBounds(center, screenSize)) {
@@ -67,11 +67,11 @@ public class ImageRecognition {
 
 
 
-	private static Point[] scaleImageRectangleForIos(Dimension screenSize, Point[] imgRect) {
+	private static Point[] scaleImageRectangleForIos(Dimension screenSize, Point[] imgRect, String scene) {
 		Point[] imgRectScaled;
 		//for retina devices we need to recalculate coordinates
-		double sceneHeight = imageFinder.getSceneHeight();
-		double sceneWidth = imageFinder.getSceneWidth();
+		double sceneHeight = imageFinder.getSceneHeight(scene);
+		double sceneWidth = imageFinder.getSceneWidth(scene);
 
 		int screenHeight = screenSize.getHeight();
 		int screenWidth = screenSize.getWidth();

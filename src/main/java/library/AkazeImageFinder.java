@@ -23,16 +23,18 @@ import static org.opencv.imgproc.Imgproc.resize;
 public class AkazeImageFinder {
 
     private static final Logger logger = LoggerFactory.getLogger(AkazeImageFinder.class);
-    public double scene_height;
-    public double scene_width;
-    double lastResizeFactor;
+    double lastResizeFactor; //TODO Severi remove this
 
-    public double getSceneHeight() {
+    public double getSceneHeight(String sceneFile) {
+        Mat img_scene = Highgui.imread(sceneFile, Highgui.CV_LOAD_IMAGE_UNCHANGED);
+        double scene_height = img_scene.rows();
         return scene_height;
     }
 
-    public double getSceneWidth() {
-        return scene_width;
+    public double getSceneWidth(String sceneFile) {
+    	Mat img_scene = Highgui.imread(sceneFile, Highgui.CV_LOAD_IMAGE_UNCHANGED);
+    	double scene_width = img_scene.cols();
+    	return scene_width;
     }
 
     public Point[] findImage(String queryImageFile, String sceneFile, double tolerance) {
@@ -41,9 +43,9 @@ public class AkazeImageFinder {
         Mat img_object = Highgui.imread(queryImageFile, Highgui.CV_LOAD_IMAGE_UNCHANGED);
         Mat img_scene = Highgui.imread(sceneFile, Highgui.CV_LOAD_IMAGE_UNCHANGED);
 
-        Mat resized_img_scene = new Mat();
-        scene_height = img_scene.rows();
-        scene_width = img_scene.cols();
+        
+        double scene_height = img_scene.rows();
+        double scene_width = img_scene.cols();
         //logger.info("Scene height and width: " + scene_height + ", " + scene_width);
 
         double resizeFactor = 1;
@@ -53,6 +55,7 @@ public class AkazeImageFinder {
             resizeFactor = scene_height / 750;
 
         if (resizeFactor > 1) {
+            Mat resized_img_scene = new Mat();
             Size size = new Size(scene_width / resizeFactor, scene_height / resizeFactor);
             resize(img_scene, resized_img_scene, size);
             Highgui.imwrite(sceneFile, resized_img_scene);
