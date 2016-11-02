@@ -47,27 +47,25 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
 
     public Point[] findImageOnScreen(String image) throws Exception {
     	ImageRecognitionSettingsDTO defaultSettings = new ImageRecognitionSettingsDTO();
-    	return findImageOnScreen(image, defaultSettings);
+    	return findImageOnScreen(image, defaultSettings).getImageRectangle();
     }
     
-    public Point[] findImageOnScreen(String image, ImageRecognitionSettingsDTO settings) throws Exception {
-    	ImageSearchDTO dto = findImageOnScreen2(image, settings);
-    	return dto.getImageRectangle();
-    }
-    
-    private ImageSearchDTO findImageOnScreen2(String imageName, ImageRecognitionSettingsDTO settings) throws Exception { 
+    public ImageSearchDTO findImageOnScreen(String imageName, ImageRecognitionSettingsDTO settings) throws Exception { 
     	// queryImageFolder is "", unless set by setQueryImageFolder()
         String queryImageFolder = "queryimages/" + queryImageSubFolder;
         String screenshotsFolder = "target/reports/screenshots/"; //TODO Severi remove this
-    	ImageSearchDTO foundImage = ImageRecognition.findImageOnScreen(imageName, queryImageFolder, screenshotsFolder, settings, getScreenSizeADB(), platformName);
+        String imageFile = queryImageFolder+imageName;
+        log("Searching for: "+imageFile);
+    	ImageSearchDTO foundImage = ImageRecognition.findImageOnScreen(imageFile, screenshotsFolder, settings, getScreenSize(), platformName);
         return foundImage;
     }
 
     public void waitForImageToDisappearFromScreen(String image) throws Exception {
         String queryImageFolder = "queryimages/" + queryImageSubFolder; //TODO Severi remove this
         String screenshotsFolder = "target/reports/screenshots/"; //TODO Severi remove this
-        Dimension screenSize = getScreenSizeADB(); //TODO Severi remove this
-        boolean hasImageDisappeared = ImageRecognition.hasImageDissappearedFromScreenBeforeTimeout(image, queryImageFolder, screenshotsFolder, screenSize, platformName);
+        Dimension screenSize = getScreenSize(); //TODO Severi remove this
+        String imageFile = queryImageFolder+image;
+		boolean hasImageDisappeared = ImageRecognition.hasImageDissappearedFromScreenBeforeTimeout(imageFile, screenshotsFolder, screenSize, platformName);
 		assert(hasImageDisappeared);
     }
 
@@ -83,42 +81,41 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
 
 
     //Uses adb commands to get the screen size. To be used when appium methods fail. Only works on Android devices.
-    public Dimension getScreenSizeADB() throws Exception {
+    public Dimension getScreenSize() throws Exception {
         log("trying to get size from adb...");
         log("------------------------------");
         if (platformName.equalsIgnoreCase("iOS")) {
             return driver.manage().window().getSize();
         } else {
-            String adb = "adb";
-            String[] adbCommand = {adb, "shell", "dumpsys", "window"};
-            try {
-                ProcessBuilder p = new ProcessBuilder(adbCommand);
-                Process proc = p.start();
-                InputStream stdin = proc.getInputStream();
-                InputStreamReader isr = new InputStreamReader(stdin);
-                BufferedReader br = new BufferedReader(isr);
-                String line = null;
-                String[] size = null;
-                while ((line = br.readLine()) != null) {
-                    if (!line.contains("OriginalmUnrestrictedScreen")) { //we do this check for devices with android 5.x+ The adb command returns an extra line with the values 0x0 which must be filtered out.
-                        if (line.contains("mUnrestrictedScreen")) {
-                            proc.waitFor();
-                            String[] tmp = line.split("\\) ");
-                            size = tmp[1].split("x");
-                        }
-                    }
-                }
-                int width = Integer.parseInt(size[0]);
-                int height = Integer.parseInt(size[1]);
-                Dimension screenSize = new Dimension(width, height);
-                return screenSize;
-
-            } catch (Throwable t) {
-                t.printStackTrace();
-            }
+            return getAndroidScreenSize();
         }
-        return null;
     }
+
+
+	private Dimension getAndroidScreenSize() throws IOException, InterruptedException {
+		String adb = "adb";
+		String[] adbCommand = {adb, "shell", "dumpsys", "window"};
+		ProcessBuilder p = new ProcessBuilder(adbCommand);
+		Process proc = p.start();
+		InputStream stdin = proc.getInputStream();
+		InputStreamReader isr = new InputStreamReader(stdin);
+		BufferedReader br = new BufferedReader(isr);
+		String line = null;
+		String[] size = null;
+		while ((line = br.readLine()) != null) {
+		    if (!line.contains("OriginalmUnrestrictedScreen")) { //we do this check for devices with android 5.x+ The adb command returns an extra line with the values 0x0 which must be filtered out.
+		        if (line.contains("mUnrestrictedScreen")) {
+		            proc.waitFor();
+		            String[] tmp = line.split("\\) ");
+		            size = tmp[1].split("x");
+		        }
+		    }
+		}
+		int width = Integer.parseInt(size[0]);
+		int height = Integer.parseInt(size[1]);
+		Dimension screenSize = new Dimension(width, height);
+		return screenSize;
+	}
 
     public boolean findDeviceTypeADB() throws Exception {
         log("trying to find device type ...");
@@ -172,7 +169,7 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
     public String grabTextFromImage(String image) throws Exception {
     	ImageRecognitionSettingsDTO settings = new ImageRecognitionSettingsDTO();
     	settings.setCrop(true);
-    	ImageSearchDTO imageSearch = findImageOnScreen2(image, settings);
+    	ImageSearchDTO imageSearch = findImageOnScreen(image, settings);
         String text = ImageRecognition.getTextStringFromImage(imageSearch.getScreenshotFile());
 		return text;
     }
@@ -195,7 +192,7 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
         int appium_screenWidth = appium_dimensions.getWidth();
         int appium_screenHeight = appium_dimensions.getHeight();
 
-        Dimension adb_dimension = getScreenSizeADB();
+        Dimension adb_dimension = getScreenSize();
         int adb_screenWidth = adb_dimension.getWidth();
         int adb_screenHeight = adb_dimension.getHeight();
 

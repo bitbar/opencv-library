@@ -112,16 +112,15 @@ public class ImageRecognition {
 	}
 	
 	
-	public static boolean hasImageDissappearedFromScreenBeforeTimeout(String image, String queryImageFolder,
+	public static boolean hasImageDissappearedFromScreenBeforeTimeout(String imageFile,
 			String screenshotsFolder, Dimension screenSize, String platformName) throws Exception {
-		log("==> Trying to find image: " + image);
+		log("==> Trying to find image: " + imageFile);
         int retry_counter=0;
         long start = System.nanoTime();
-        String queryImageFile = queryImageFolder + image;
         while (((System.nanoTime() - start) / 1e6 / 1000 < 300)) {
-        	String screenshotName = parseFileName(image) + "_screenshot_"+retry_counter;
+        	String screenshotName = parseFileName(imageFile) + "_screenshot_"+retry_counter;
 			String screenShotFile = ImageRecognition.takeScreenshot(screenshotName, screenshotsFolder, platformName);
-			if ((findImage(queryImageFile, screenShotFile, platformName, screenSize)) == null) {
+			if ((findImage(imageFile, screenShotFile, platformName, screenSize)) == null) {
         		log("Image has successfully disappeared from screen.");
         		return true;
         	}
@@ -163,21 +162,22 @@ public class ImageRecognition {
     
     
     
-    public static ImageSearchDTO findImageOnScreen(String image, String queryImageFolder, String screenshotsFolder, ImageRecognitionSettingsDTO settings, Dimension screenSize, String platformName) throws InterruptedException, IOException, Exception {
-    	ImageSearchDTO foundImageDto = findImageLoop(image, queryImageFolder, screenshotsFolder, settings, screenSize, platformName);
+    public static ImageSearchDTO findImageOnScreen(String imageFile, String screenshotsFolder, ImageRecognitionSettingsDTO settings, Dimension screenSize, String platformName) throws InterruptedException, IOException, Exception {
+    	ImageSearchDTO foundImageDto = findImageLoop(imageFile, screenshotsFolder, settings, screenSize, platformName);
         if (foundImageDto.isFound() && settings.isCrop()) {
         	cropImage(foundImageDto);
         }
         return foundImageDto;
     }
     
-	private static ImageSearchDTO findImageLoop(String image, String queryImageFolder, String screenshotsFolder, ImageRecognitionSettingsDTO settings, Dimension screenSize, String platformName) throws InterruptedException, IOException, Exception {
+	private static ImageSearchDTO findImageLoop(String imageFile, String screenshotsFolder, ImageRecognitionSettingsDTO settings, Dimension screenSize, String platformName) throws InterruptedException, IOException, Exception {
 		long start_time = System.nanoTime();
 		ImageSearchDTO foundImageDto = new ImageSearchDTO();
+		String imageName = parseFileName(imageFile);
 		for (int i = 0; i < settings.getRetries(); i++) {
-			String queryImageFile = queryImageFolder + image;
-            String screenshotFile = takeScreenshot(image + "_screenshot",screenshotsFolder, platformName);
-            Point[] imgRect = ImageRecognition.findImage(queryImageFile, screenshotFile, settings, platformName, screenSize);
+			String screenshotName = imageName + "_screenshot_"+i;
+			String screenshotFile = takeScreenshot(screenshotName,screenshotsFolder, platformName);
+            Point[] imgRect = ImageRecognition.findImage(imageFile, screenshotFile, settings, platformName, screenSize);
             if (imgRect!=null){
             	long end_time = System.nanoTime();
                 int difference = (int) ((end_time - start_time) / 1e6 / 1000);
