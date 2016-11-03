@@ -40,56 +40,22 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
     public ImageSearchResult findImageOnScreen(String imageName, ImageRecognitionSettings settings) throws Exception { 
     	// queryImageFolder is "", unless set by setQueryImageFolder()
         String queryImageFolder = "queryimages/" + queryImageSubFolder;
-        String screenshotsFolder = "target/reports/screenshots/"; //TODO Severi remove this
+        String screenshotsFolder = "target/reports/screenshots/";
         String imageFile = queryImageFolder+imageName;
         log("Searching for: "+imageFile);
-    	ImageSearchResult foundImage = ImageRecognition.findImageOnScreen(imageFile, screenshotsFolder, settings, getScreenSize(), platform);
+        Dimension screenSize = ImageRecognition.getScreenSize(platform, driver);
+    	ImageSearchResult foundImage = ImageRecognition.findImageOnScreen(imageFile, screenshotsFolder, settings, screenSize, platform);
         return foundImage;
     }
 
     public void waitForImageToDisappearFromScreen(String image) throws Exception {
-        String queryImageFolder = "queryimages/" + queryImageSubFolder; //TODO Severi remove this
-        String screenshotsFolder = "target/reports/screenshots/"; //TODO Severi remove this
-        Dimension screenSize = getScreenSize(); //TODO Severi remove this
+        String queryImageFolder = "queryimages/" + queryImageSubFolder;
+        String screenshotsFolder = "target/reports/screenshots/";
+        Dimension screenSize = ImageRecognition.getScreenSize(platform, driver);
         String imageFile = queryImageFolder+image;
 		boolean hasImageDisappeared = ImageRecognition.hasImageDissappearedFromScreenBeforeTimeout(imageFile, screenshotsFolder, screenSize, platform);
 		assert(hasImageDisappeared);
     }
-
-    public Dimension getScreenSize() throws Exception {
-        log("trying to get size from adb...");
-        log("------------------------------");
-        if (platform.equals(PlatformType.IOS)) {
-            return driver.manage().window().getSize();
-        } else {
-            return getAndroidScreenSize();
-        }
-    }
-
-	private Dimension getAndroidScreenSize() throws IOException, InterruptedException {
-		String adb = "adb";
-		String[] adbCommand = {adb, "shell", "dumpsys", "window"};
-		ProcessBuilder p = new ProcessBuilder(adbCommand);
-		Process proc = p.start();
-		InputStream stdin = proc.getInputStream();
-		InputStreamReader isr = new InputStreamReader(stdin);
-		BufferedReader br = new BufferedReader(isr);
-		String line = null;
-		String[] size = null;
-		while ((line = br.readLine()) != null) {
-		    if (!line.contains("OriginalmUnrestrictedScreen")) { //we do this check for devices with android 5.x+ The adb command returns an extra line with the values 0x0 which must be filtered out.
-		        if (line.contains("mUnrestrictedScreen")) {
-		            proc.waitFor();
-		            String[] tmp = line.split("\\) ");
-		            size = tmp[1].split("x");
-		        }
-		    }
-		}
-		int width = Integer.parseInt(size[0]);
-		int height = Integer.parseInt(size[1]);
-		Dimension screenSize = new Dimension(width, height);
-		return screenSize;
-	}
 
 
     public String grabTextFromImage(String image) throws Exception {

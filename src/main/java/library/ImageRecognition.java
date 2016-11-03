@@ -15,6 +15,8 @@ import dtos.ImageLocation;
 import dtos.ImageRecognitionSettings;
 import dtos.ImageSearchResult;
 import dtos.PlatformType;
+import io.appium.java_client.AppiumDriver;
+import io.appium.java_client.MobileElement;
 
 public class ImageRecognition {
 
@@ -23,6 +25,41 @@ public class ImageRecognition {
     private static void log(String message) {
         logger.info(message);
     }
+    
+    // TODO remove this and make private when a way is found to get the screen size for iOS without the appium driver
+    // and then remove the screen size parameter from other methods
+    public static Dimension getScreenSize(PlatformType platform, AppiumDriver<MobileElement> driver) throws Exception {
+        if (platform.equals(PlatformType.IOS)) {
+			return driver.manage().window().getSize();
+        } else {
+            return getAndroidScreenSize();
+        }
+    }
+    
+	private static Dimension getAndroidScreenSize() throws IOException, InterruptedException {
+		String adb = "adb";
+		String[] adbCommand = {adb, "shell", "dumpsys", "window"};
+		ProcessBuilder p = new ProcessBuilder(adbCommand);
+		Process proc = p.start();
+		InputStream stdin = proc.getInputStream();
+		InputStreamReader isr = new InputStreamReader(stdin);
+		BufferedReader br = new BufferedReader(isr);
+		String line = null;
+		String[] size = null;
+		while ((line = br.readLine()) != null) {
+		    if (!line.contains("OriginalmUnrestrictedScreen")) { //we do this check for devices with android 5.x+ The adb command returns an extra line with the values 0x0 which must be filtered out.
+		        if (line.contains("mUnrestrictedScreen")) {
+		            proc.waitFor();
+		            String[] tmp = line.split("\\) ");
+		            size = tmp[1].split("x");
+		        }
+		    }
+		}
+		int width = Integer.parseInt(size[0]);
+		int height = Integer.parseInt(size[1]);
+		Dimension screenSize = new Dimension(width, height);
+		return screenSize;
+	}
 	
 	
     public static ImageLocation findImage(String image, String scene, PlatformType platform, Dimension screenSize) throws Exception {
@@ -252,8 +289,11 @@ public class ImageRecognition {
 
 	
 
-	private static void takeIDeviceScreenshot(String fullFileName) throws IOException, InterruptedException {
+	private static void takeIDeviceScreenshot(String fullFileName) throws Exception {
 		String udid = System.getenv("UDID");
+		if (udid==null){
+			throw new Exception("$UDID was null, set UDID environment variable and try again");
+		}
 		String[] cmd = new String[]{"idevicescreenshot", "-u", udid, fullFileName};
 		Process p = Runtime.getRuntime().exec(cmd);
 		BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
