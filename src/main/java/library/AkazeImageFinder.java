@@ -9,6 +9,9 @@ import org.opencv.highgui.Highgui;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import dtos.ImageLocation;
+import dtos.ImageSearchDTO;
+
 import java.io.*;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -37,7 +40,7 @@ public class AkazeImageFinder {
     	return scene_width;
     }
 
-    public Point[] findImage(String queryImageFile, String sceneFile, double tolerance) {
+    public ImageLocation findImage(String queryImageFile, String sceneFile, double tolerance) {
 
         long start_time = System.nanoTime();
         Mat img_object = Highgui.imread(queryImageFile, Highgui.CV_LOAD_IMAGE_UNCHANGED);
@@ -186,13 +189,16 @@ public class AkazeImageFinder {
         int difference = (int) ((end_time - start_time) / 1e6 / 1000);
         logger.info("==> Image finder took: " + difference + " secs.");
 
-        if (checkFoundImageDimensions(top_left, top_right, bottom_left, bottom_right, tolerance))
-            return null;
-        if (checkFoundImageSizeRatio(initial_height, initial_width, top_left, top_right, bottom_left, bottom_right, initial_ratio, found_ratio1, found_ratio2, tolerance))
-            return null;
+        if (checkFoundImageDimensions(top_left, top_right, bottom_left, bottom_right, tolerance)){
+        	return null;        	
+        }
+        if (checkFoundImageSizeRatio(initial_height, initial_width, top_left, top_right, bottom_left, bottom_right, initial_ratio, found_ratio1, found_ratio2, tolerance)){
+        	return null;        	
+        }
 
         //calculate points in original orientation
         Point[] points = new Point[5];
+        
 
         if (rotationAngle == 1.0) {
             points[0] = new Point(scene_height / resizeFactor - bottom_left.y, bottom_left.x);
@@ -218,25 +224,48 @@ public class AkazeImageFinder {
 
         Point centerOriginal = new Point((points[0].x + (points[1].x - points[0].x) / 2) * resizeFactor, (points[0].y + (points[3].y - points[0].y) / 2) * resizeFactor);
 
-        points[4] = centerOriginal;
-
-        logger.info("Image found at coordinates: " + (int) points[4].x + ", " + (int) points[4].y + " on screen.");
-        logger.info("All corners: " + points[0].toString() + " " + points[1].toString() + " " + points[2].toString() + " " + points[4].toString());
 
         points[0] = new Point(points[0].x * resizeFactor, points[0].y * resizeFactor);
         points[1] = new Point(points[1].x * resizeFactor, points[1].y * resizeFactor);
         points[2] = new Point(points[2].x * resizeFactor, points[2].y * resizeFactor);
         points[3] = new Point(points[3].x * resizeFactor, points[3].y * resizeFactor);
+        points[4] = centerOriginal;
+        
+        logger.info("Image found at coordinates: " + (int) points[4].x + ", " + (int) points[4].y + " on screen.");
+        logger.info("All corners: " + points[0].toString() + " " + points[1].toString() + " " + points[2].toString() + " " + points[4].toString());
 
-        return points;
+        ImageLocation location = new ImageLocation();
+        location.setTopLeft(points[0]);
+        location.setTopRight(points[1]);
+        location.setBottomRight(points[2]);
+        location.setBottomLeft(points[3]);
+        location.setCenter(centerOriginal);
+        
+        return location;
     }
 
-    public void cropImage(String scene_filename_nopng, double x, double y, double width, double height) {
-
-        String scene_filename = scene_filename_nopng + ".png";
+    public void cropImage(ImageSearchDTO imageDto) {
+    	double x = imageDto.getImageLocation().getTopLeft().x;
+    	double y = imageDto.getImageLocation().getTopLeft().y;
+    	double width = imageDto.getImageLocation().getWidth();
+    	double height = imageDto.getImageLocation().getHeight();
+    	String scene_filename = imageDto.getScreenshotFile();
+    	
+    	log("x: "+x);
+    	log("y: "+y);
+    	log("width:"+width);
+    	log("height: "+height);
+    	log("lastResizeFactor: "+lastResizeFactor);
+    	
         Mat img_object = Highgui.imread(scene_filename);
-
-        Rect croppedRect = new Rect((int) (x / lastResizeFactor), (int) (y / lastResizeFactor), (int) (width / lastResizeFactor), (int) (height / lastResizeFactor));
+        
+        int x_resized = (int) (x / lastResizeFactor);
+		int y_resized = (int) (y / lastResizeFactor);
+		int width_resized = (int) (width / lastResizeFactor);
+		int height_resized = (int) (height / lastResizeFactor);
+		Rect croppedRect = new Rect(x_resized, y_resized, width_resized, height_resized);
+        log(img_object.toString());
+        log(croppedRect.toString());
         Mat croppedImage = new Mat(img_object, croppedRect);
         Highgui.imwrite(scene_filename, croppedImage);
     }

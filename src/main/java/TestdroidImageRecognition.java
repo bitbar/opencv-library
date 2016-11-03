@@ -1,13 +1,11 @@
-import library.AkazeImageFinder;
 import library.ImageRecognition;
 
-import org.apache.commons.io.FileUtils;
 import org.opencv.core.Point;
 import org.openqa.selenium.Dimension;
-import org.openqa.selenium.OutputType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import dtos.ImageLocation;
 import dtos.ImageRecognitionSettingsDTO;
 import dtos.ImageSearchDTO;
 
@@ -33,9 +31,9 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
         }
     }
 
-    public Point[] findImageOnScreen(String image) throws Exception {
+    public ImageLocation findImageOnScreen(String image) throws Exception {
     	ImageRecognitionSettingsDTO defaultSettings = new ImageRecognitionSettingsDTO();
-    	return findImageOnScreen(image, defaultSettings).getImageRectangle();
+    	return findImageOnScreen(image, defaultSettings).getImageLocation();
     }
     
     public ImageSearchDTO findImageOnScreen(String imageName, ImageRecognitionSettingsDTO settings) throws Exception { 
@@ -94,12 +92,17 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
 
 
     public String grabTextFromImage(String image) throws Exception {
-    	ImageRecognitionSettingsDTO settings = new ImageRecognitionSettingsDTO();
-    	settings.setCrop(true);
-    	ImageSearchDTO imageSearch = findImageOnScreen(image, settings);
+    	ImageSearchDTO imageSearch = findAndCropImage(image);
         String text = ImageRecognition.getTextStringFromImage(imageSearch.getScreenshotFile());
 		return text;
     }
+
+	public ImageSearchDTO findAndCropImage(String image) throws Exception {
+		ImageRecognitionSettingsDTO settings = new ImageRecognitionSettingsDTO();
+    	settings.setCrop(true);
+    	ImageSearchDTO imageSearch = findImageOnScreen(image, settings);
+		return imageSearch;
+	}
 
 
 }

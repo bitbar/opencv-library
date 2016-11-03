@@ -1,21 +1,19 @@
 package dtos;
 
-import org.opencv.core.Point;
-
 public class ImageSearchDTO {
 	
 	public ImageSearchDTO(){
 		this.screenshotFile = null;
-		this.imageRectangle = null;
+		this.imageLocation = null;
 	}
 	
-	public ImageSearchDTO(String screenshotFile, Point[] imageRectangle){
+	public ImageSearchDTO(String screenshotFile, ImageLocation imageLocation){
 		this.screenshotFile = screenshotFile;
-		this.imageRectangle = imageRectangle;
+		this.imageLocation = imageLocation;
 	}
 	
 	public boolean isFound(){
-		return screenshotFile!=null && imageRectangle!=null;
+		return screenshotFile!=null && imageLocation!=null;
 	}
 	
 	public String getScreenshotFile() {
@@ -25,14 +23,14 @@ public class ImageSearchDTO {
 		this.screenshotFile = screenshotFile;
 	}
 
-	public Point[] getImageRectangle() {
-		return imageRectangle;
+	public ImageLocation getImageLocation() {
+		return imageLocation;
 	}
 
-	public void setImageRectangle(Point[] imageRectangle) {
-		this.imageRectangle = imageRectangle;
+	public void setImageLocation(ImageLocation imageLocation) {
+		this.imageLocation = imageLocation;
 	}
 
 	private String screenshotFile;
-	private Point[] imageRectangle;
+	private ImageLocation imageLocation;
 }

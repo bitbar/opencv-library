@@ -3,7 +3,6 @@ import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
-import org.openqa.selenium.By;
 import org.slf4j.LoggerFactory;
 
 import library.AkazeImageFinder;
@@ -56,7 +55,7 @@ public class iOSSample extends TestdroidImageRecognition {
           log("Keyboard not present; going forward.");
         }
 
-        findImageOnScreen("bitbar_logo.png");
+        findAndCropImage("test.png");
 //        waitForImageToDisappearFromScreen("bitbar_logo.png");
         log("Success.");
     }
