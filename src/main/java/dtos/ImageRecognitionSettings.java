@@ -1,13 +1,13 @@
 package dtos;
 
-public class ImageRecognitionSettingsDTO {
+public class ImageRecognitionSettings {
     
 	private final int DEFAULT_RETRIES = 5;
     private final int DEFAULT_RETRY_WAIT = 0;
     private final double DEFAULT_TOLERANCE = 0.6;
     private final boolean DEFAULT_CROP = false;
 	
-	public ImageRecognitionSettingsDTO(){
+	public ImageRecognitionSettings(){
 		this.retries = DEFAULT_RETRIES;
 		this.retryWaitTime = DEFAULT_RETRY_WAIT;
 		this.tolerance = DEFAULT_TOLERANCE;

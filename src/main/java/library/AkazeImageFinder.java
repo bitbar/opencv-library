@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import dtos.ImageLocation;
-import dtos.ImageSearchDTO;
+import dtos.ImageSearchResult;
 
 import java.io.*;
 import java.lang.reflect.Field;
@@ -244,7 +244,7 @@ public class AkazeImageFinder {
         return location;
     }
 
-    public void cropImage(ImageSearchDTO imageDto) {
+    public void cropImage(ImageSearchResult imageDto) {
     	double x = imageDto.getImageLocation().getTopLeft().x;
     	double y = imageDto.getImageLocation().getTopLeft().y;
     	double width = imageDto.getImageLocation().getWidth();

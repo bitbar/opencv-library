@@ -6,8 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import dtos.ImageLocation;
-import dtos.ImageRecognitionSettingsDTO;
-import dtos.ImageSearchDTO;
+import dtos.ImageRecognitionSettings;
+import dtos.ImageSearchResult;
+import dtos.PlatformType;
 
 import java.io.*;
 
@@ -32,17 +33,17 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
     }
 
     public ImageLocation findImageOnScreen(String image) throws Exception {
-    	ImageRecognitionSettingsDTO defaultSettings = new ImageRecognitionSettingsDTO();
+    	ImageRecognitionSettings defaultSettings = new ImageRecognitionSettings();
     	return findImageOnScreen(image, defaultSettings).getImageLocation();
     }
     
-    public ImageSearchDTO findImageOnScreen(String imageName, ImageRecognitionSettingsDTO settings) throws Exception { 
+    public ImageSearchResult findImageOnScreen(String imageName, ImageRecognitionSettings settings) throws Exception { 
     	// queryImageFolder is "", unless set by setQueryImageFolder()
         String queryImageFolder = "queryimages/" + queryImageSubFolder;
         String screenshotsFolder = "target/reports/screenshots/"; //TODO Severi remove this
         String imageFile = queryImageFolder+imageName;
         log("Searching for: "+imageFile);
-    	ImageSearchDTO foundImage = ImageRecognition.findImageOnScreen(imageFile, screenshotsFolder, settings, getScreenSize(), platformName);
+    	ImageSearchResult foundImage = ImageRecognition.findImageOnScreen(imageFile, screenshotsFolder, settings, getScreenSize(), platform);
         return foundImage;
     }
 
@@ -51,14 +52,14 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
         String screenshotsFolder = "target/reports/screenshots/"; //TODO Severi remove this
         Dimension screenSize = getScreenSize(); //TODO Severi remove this
         String imageFile = queryImageFolder+image;
-		boolean hasImageDisappeared = ImageRecognition.hasImageDissappearedFromScreenBeforeTimeout(imageFile, screenshotsFolder, screenSize, platformName);
+		boolean hasImageDisappeared = ImageRecognition.hasImageDissappearedFromScreenBeforeTimeout(imageFile, screenshotsFolder, screenSize, platform);
 		assert(hasImageDisappeared);
     }
 
     public Dimension getScreenSize() throws Exception {
         log("trying to get size from adb...");
         log("------------------------------");
-        if (platformName.equalsIgnoreCase("iOS")) {
+        if (platform.equals(PlatformType.IOS)) {
             return driver.manage().window().getSize();
         } else {
             return getAndroidScreenSize();
@@ -92,15 +93,15 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
 
 
     public String grabTextFromImage(String image) throws Exception {
-    	ImageSearchDTO imageSearch = findAndCropImage(image);
+    	ImageSearchResult imageSearch = findAndCropImage(image);
         String text = ImageRecognition.getTextStringFromImage(imageSearch.getScreenshotFile());
 		return text;
     }
 
-	public ImageSearchDTO findAndCropImage(String image) throws Exception {
-		ImageRecognitionSettingsDTO settings = new ImageRecognitionSettingsDTO();
+	public ImageSearchResult findAndCropImage(String image) throws Exception {
+		ImageRecognitionSettings settings = new ImageRecognitionSettings();
     	settings.setCrop(true);
-    	ImageSearchDTO imageSearch = findImageOnScreen(image, settings);
+    	ImageSearchResult imageSearch = findImageOnScreen(image, settings);
 		return imageSearch;
 	}
 

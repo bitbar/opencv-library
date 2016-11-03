@@ -1,13 +1,13 @@
 package dtos;
 
-public class ImageSearchDTO {
+public class ImageSearchResult {
 	
-	public ImageSearchDTO(){
+	public ImageSearchResult(){
 		this.screenshotFile = null;
 		this.imageLocation = null;
 	}
 	
-	public ImageSearchDTO(String screenshotFile, ImageLocation imageLocation){
+	public ImageSearchResult(String screenshotFile, ImageLocation imageLocation){
 		this.screenshotFile = screenshotFile;
 		this.imageLocation = imageLocation;
 	}

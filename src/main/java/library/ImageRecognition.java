@@ -12,8 +12,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import dtos.ImageLocation;
-import dtos.ImageRecognitionSettingsDTO;
-import dtos.ImageSearchDTO;
+import dtos.ImageRecognitionSettings;
+import dtos.ImageSearchResult;
+import dtos.PlatformType;
 
 public class ImageRecognition {
 
@@ -24,9 +25,9 @@ public class ImageRecognition {
     }
 	
 	
-    public static ImageLocation findImage(String image, String scene, String platformName, Dimension screenSize) throws Exception {
-    	ImageRecognitionSettingsDTO setting = new ImageRecognitionSettingsDTO();
-    	return findImage(image, scene, setting, platformName, screenSize);
+    public static ImageLocation findImage(String image, String scene, PlatformType platform, Dimension screenSize) throws Exception {
+    	ImageRecognitionSettings setting = new ImageRecognitionSettings();
+    	return findImage(image, scene, setting, platform, screenSize);
     }
     
     
@@ -34,13 +35,13 @@ public class ImageRecognition {
     //The "image" parameter is the image that you are searching for
     //The "scene" parameter is the image in which we are looking for "image"
     // "tolerance" sets the required accuracy for the image recognition algorithm.
-    public static ImageLocation findImage(String image, String scene, ImageRecognitionSettingsDTO settings, String platformName, Dimension screenSize) throws Exception {
+    public static ImageLocation findImage(String image, String scene, ImageRecognitionSettings settings, PlatformType platform, Dimension screenSize) throws Exception {
         log("Searching for " + image);
         log("Searching in " + scene);
         ImageLocation imgLocation = findImageUsingAkaze(image, scene, settings);
 
         if (imgLocation != null) {
-            if (platformName.equalsIgnoreCase("iOS")) {
+            if (platform.equals(PlatformType.IOS)) {
             	imgLocation = scaleImageRectangleForIos(screenSize, imgLocation, scene);
             }
             Point center = imgLocation.getCenter();
@@ -55,7 +56,7 @@ public class ImageRecognition {
 
 
 
-	private static ImageLocation findImageUsingAkaze(String image, String scene, ImageRecognitionSettingsDTO settings) {
+	private static ImageLocation findImageUsingAkaze(String image, String scene, ImageRecognitionSettings settings) {
 		ImageLocation location = imageFinder.findImage(image, scene, settings.getTolerance());
 		return location;
 	}
@@ -106,14 +107,14 @@ public class ImageRecognition {
 	
 	
 	public static boolean hasImageDissappearedFromScreenBeforeTimeout(String imageFile,
-			String screenshotsFolder, Dimension screenSize, String platformName) throws Exception {
+			String screenshotsFolder, Dimension screenSize, PlatformType platform) throws Exception {
 		log("==> Trying to find image: " + imageFile);
         int retry_counter=0;
         long start = System.nanoTime();
         while (((System.nanoTime() - start) / 1e6 / 1000 < 300)) {
         	String screenshotName = parseFileName(imageFile) + "_screenshot_"+retry_counter;
-			String screenShotFile = ImageRecognition.takeScreenshot(screenshotName, screenshotsFolder, platformName);
-			if ((findImage(imageFile, screenShotFile, platformName, screenSize)) == null) {
+			String screenShotFile = ImageRecognition.takeScreenshot(screenshotName, screenshotsFolder, platform);
+			if ((findImage(imageFile, screenShotFile, platform, screenSize)) == null) {
         		log("Image has successfully disappeared from screen.");
         		return true;
         	}
@@ -153,22 +154,22 @@ public class ImageRecognition {
     
     
     
-    public static ImageSearchDTO findImageOnScreen(String imageFile, String screenshotsFolder, ImageRecognitionSettingsDTO settings, Dimension screenSize, String platformName) throws InterruptedException, IOException, Exception {
-    	ImageSearchDTO foundImageDto = findImageLoop(imageFile, screenshotsFolder, settings, screenSize, platformName);
+    public static ImageSearchResult findImageOnScreen(String imageFile, String screenshotsFolder, ImageRecognitionSettings settings, Dimension screenSize, PlatformType platform) throws InterruptedException, IOException, Exception {
+    	ImageSearchResult foundImageDto = findImageLoop(imageFile, screenshotsFolder, settings, screenSize, platform);
         if (foundImageDto.isFound() && settings.isCrop()) {
         	cropImage(foundImageDto);
         }
         return foundImageDto;
     }
     
-	private static ImageSearchDTO findImageLoop(String imageFile, String screenshotsFolder, ImageRecognitionSettingsDTO settings, Dimension screenSize, String platformName) throws InterruptedException, IOException, Exception {
+	private static ImageSearchResult findImageLoop(String imageFile, String screenshotsFolder, ImageRecognitionSettings settings, Dimension screenSize, PlatformType platform) throws InterruptedException, IOException, Exception {
 		long start_time = System.nanoTime();
-		ImageSearchDTO foundImageDto = new ImageSearchDTO();
+		ImageSearchResult foundImageDto = new ImageSearchResult();
 		String imageName = parseFileName(imageFile);
 		for (int i = 0; i < settings.getRetries(); i++) {
 			String screenshotName = imageName + "_screenshot_"+i;
-			String screenshotFile = takeScreenshot(screenshotName,screenshotsFolder, platformName);
-			ImageLocation imageLocation = ImageRecognition.findImage(imageFile, screenshotFile, settings, platformName, screenSize);
+			String screenshotFile = takeScreenshot(screenshotName,screenshotsFolder, platform);
+			ImageLocation imageLocation = ImageRecognition.findImage(imageFile, screenshotFile, settings, platform, screenSize);
             if (imageLocation!=null){
             	long end_time = System.nanoTime();
                 int difference = (int) ((end_time - start_time) / 1e6 / 1000);
@@ -183,13 +184,13 @@ public class ImageRecognition {
 		return foundImageDto;
 	}
 	
-	private static void cropImage(ImageSearchDTO foundImage) {
+	private static void cropImage(ImageSearchResult foundImage) {
 		log("Cropping image..");
 		imageFinder.cropImage(foundImage);
 		log("Cropping image.. Succeeded!");
 	}
     
-	private static void retryWait(ImageRecognitionSettingsDTO settings) throws InterruptedException {
+	private static void retryWait(ImageRecognitionSettings settings) throws InterruptedException {
 		if (settings.getRetryWaitTime() > 0) {
 		    log("retryWait given, sleeping " + settings.getRetryWaitTime() + " seconds.");
 		    sleep(settings.getRetryWaitTime());
@@ -211,18 +212,18 @@ public class ImageRecognition {
     	}
 
      */
-    public static String takeScreenshot(String screenshotName, String screenshotsFolder, String platformName) throws Exception {
+    public static String takeScreenshot(String screenshotName, String screenshotsFolder, PlatformType platform) throws Exception {
     	long start_time = System.nanoTime();
     	
     	String screenshotFile = screenshotsFolder + screenshotName + ".png";
 		String fullFileName = System.getProperty("user.dir") + "/" + screenshotFile;
 
-		if (platformName.equalsIgnoreCase("iOS")) {
+		if (platform.equals(PlatformType.IOS)) {
     		takeIDeviceScreenshot(fullFileName);
-    	} else if (platformName.equalsIgnoreCase("Android")) {
+    	} else if (platform.equals(PlatformType.ANDROID)) {
     		takeAndroidScreenshot(fullFileName);
     	} else{
-    		throw new Exception("Invalid platformName: "+platformName);
+    		throw new Exception("Invalid platformType: "+platform);
     	}
 		
     	long end_time = System.nanoTime();

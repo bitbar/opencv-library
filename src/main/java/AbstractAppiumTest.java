@@ -10,6 +10,8 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import dtos.PlatformType;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -35,7 +37,7 @@ public abstract class AbstractAppiumTest {
 
     public static String screenshotsFolder = "";
     public static String appFile = System.getenv("APP_FILE");
-    public static String platformName = System.getenv("PLATFORM_NAME");
+    public static PlatformType platform;
     public static String automationName = System.getenv("AUTOMATION_NAME");
     public static String deviceName = System.getenv("DEVICE_NAME");
     public static String udid = System.getenv("UDID");
@@ -49,8 +51,8 @@ public abstract class AbstractAppiumTest {
         if (appFile == null) {
             appFile = "application.ipa";
         }
-        if (platformName == null) {
-            platformName = "iOS";
+        if (platform == null) {
+        	platform = PlatformType.IOS;
         }
         if (deviceName == null){
         	deviceName = "device";
@@ -66,7 +68,7 @@ public abstract class AbstractAppiumTest {
         dir.mkdirs();
 
         DesiredCapabilities capabilities = new DesiredCapabilities();
-        capabilities.setCapability("platformName", platformName);
+        capabilities.setCapability("platformName", platform.getPlatformName());
         capabilities.setCapability("deviceName", deviceName);
         if (udid != null)
             capabilities.setCapability("udid", udid);
@@ -96,8 +98,8 @@ public abstract class AbstractAppiumTest {
         if (appFile == null) {
             appFile = "application.apk";
         }
-        if (platformName == null) {
-            platformName = "Android";
+        if (platform == null) {
+        	platform = PlatformType.ANDROID;
         }
         if (deviceName == null){
             deviceName = "device";
@@ -111,7 +113,7 @@ public abstract class AbstractAppiumTest {
 
         DesiredCapabilities capabilities = new DesiredCapabilities();
         capabilities.setCapability("automationName", automationName);
-        capabilities.setCapability("platformName", platformName);
+        capabilities.setCapability("platformName", platform.getPlatformName());
         capabilities.setCapability("deviceName", "Android Device");
         if (udid != null)
             capabilities.setCapability("udid", udid);
