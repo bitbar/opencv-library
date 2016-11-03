@@ -55,7 +55,7 @@ public class AndroidSample extends TestdroidImageRecognition {
         
         AppiumCommons.hideKeyboard(driver);
 
-        findImageOnScreen("bitbar_logo.png");
+        findAndCropImage("test.png");
         log("Success.");
     }
 }

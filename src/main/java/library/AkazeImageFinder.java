@@ -26,7 +26,6 @@ import static org.opencv.imgproc.Imgproc.resize;
 public class AkazeImageFinder {
 
     private static final Logger logger = LoggerFactory.getLogger(AkazeImageFinder.class);
-    double lastResizeFactor; //TODO Severi remove this
 
     public double getSceneHeight(String sceneFile) {
         Mat img_scene = Highgui.imread(sceneFile, Highgui.CV_LOAD_IMAGE_UNCHANGED);
@@ -64,9 +63,9 @@ public class AkazeImageFinder {
             Highgui.imwrite(sceneFile, resized_img_scene);
             img_scene = Highgui.imread(sceneFile, Highgui.CV_LOAD_IMAGE_UNCHANGED);
             logger.info("Image was resized, resize factor is: " + resizeFactor);
-            lastResizeFactor = resizeFactor;
-        } else
-            resizeFactor = 1;
+        } else{
+        	resizeFactor = 1;        	
+        }
 
         String jsonResults = null;
         try {
@@ -240,6 +239,7 @@ public class AkazeImageFinder {
         location.setBottomRight(points[2]);
         location.setBottomLeft(points[3]);
         location.setCenter(centerOriginal);
+        location.setResizeFactor(resizeFactor);
         
         return location;
     }
@@ -250,19 +250,15 @@ public class AkazeImageFinder {
     	double width = imageDto.getImageLocation().getWidth();
     	double height = imageDto.getImageLocation().getHeight();
     	String scene_filename = imageDto.getScreenshotFile();
-    	
-    	log("x: "+x);
-    	log("y: "+y);
-    	log("width:"+width);
-    	log("height: "+height);
-    	log("lastResizeFactor: "+lastResizeFactor);
+    	int scaleFactor = imageDto.getImageLocation().getScaleFactor();
+    	double resizeFactor = imageDto.getImageLocation().getResizeFactor();
     	
         Mat img_object = Highgui.imread(scene_filename);
         
-        int x_resized = (int) (x / lastResizeFactor);
-		int y_resized = (int) (y / lastResizeFactor);
-		int width_resized = (int) (width / lastResizeFactor);
-		int height_resized = (int) (height / lastResizeFactor);
+		int x_resized = (int) (x / resizeFactor)*scaleFactor;
+		int y_resized = (int) (y / resizeFactor)*scaleFactor;
+		int width_resized = (int) (width / resizeFactor)*scaleFactor;
+		int height_resized = (int) (height / resizeFactor)*scaleFactor;
 		Rect croppedRect = new Rect(x_resized, y_resized, width_resized, height_resized);
         log(img_object.toString());
         log(croppedRect.toString());

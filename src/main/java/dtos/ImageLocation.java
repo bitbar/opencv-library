@@ -4,7 +4,10 @@ import org.opencv.core.Point;
 
 public class ImageLocation {
 	
-	public ImageLocation(){}
+	public ImageLocation(){
+		this.scaleFactor=1;
+		this.resizeFactor=1;
+	}
 	
 	
 	public Point getTopLeft() {
@@ -47,6 +50,8 @@ public class ImageLocation {
 	}
 
 	public void divideCoordinatesBy(int i) {
+		this.scaleFactor=i;
+		
 		this.topLeft.x = this.topLeft.x/i;
 		this.topLeft.y = this.topLeft.y/i;
 		
@@ -71,6 +76,16 @@ public class ImageLocation {
 		return this.bottomLeft.y-this.topLeft.y;
 	}
 	
+	public int getScaleFactor(){
+		return this.scaleFactor;
+	}
+	
+	public void setResizeFactor(double resizeFactor) {
+		this.resizeFactor=resizeFactor;
+	}
+	public double getResizeFactor(){
+		return this.resizeFactor;
+	}
 
 
 	private Point topLeft;
@@ -78,4 +93,6 @@ public class ImageLocation {
 	private Point bottomLeft;
 	private Point bottomRight;
 	private Point center;
+	private int scaleFactor;
+	private double resizeFactor;
 }
