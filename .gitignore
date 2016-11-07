@@ -4,3 +4,6 @@ run-tests.sh
 *.zip
 application.ipa
 application.apk
+*.classpath
+*.project
+*.settings/
