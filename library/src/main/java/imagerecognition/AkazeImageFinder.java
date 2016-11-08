@@ -34,9 +34,9 @@ public class AkazeImageFinder {
     }
 
     protected double getSceneWidth(String sceneFile) {
-    	Mat img_scene = Highgui.imread(sceneFile, Highgui.CV_LOAD_IMAGE_UNCHANGED);
-    	double scene_width = img_scene.cols();
-    	return scene_width;
+        Mat img_scene = Highgui.imread(sceneFile, Highgui.CV_LOAD_IMAGE_UNCHANGED);
+        double scene_width = img_scene.cols();
+        return scene_width;
     }
 
     protected ImageLocation findImage(String queryImageFile, String sceneFile, double tolerance) {
@@ -45,7 +45,7 @@ public class AkazeImageFinder {
         Mat img_object = Highgui.imread(queryImageFile, Highgui.CV_LOAD_IMAGE_UNCHANGED);
         Mat img_scene = Highgui.imread(sceneFile, Highgui.CV_LOAD_IMAGE_UNCHANGED);
 
-        
+
         double scene_height = img_scene.rows();
         double scene_width = img_scene.cols();
         //logger.info("Scene height and width: " + scene_height + ", " + scene_width);
@@ -64,7 +64,7 @@ public class AkazeImageFinder {
             img_scene = Highgui.imread(sceneFile, Highgui.CV_LOAD_IMAGE_UNCHANGED);
             logger.info("Image was resized, resize factor is: " + resizeFactor);
         } else{
-        	resizeFactor = 1;        	
+            resizeFactor = 1;        	
         }
 
         String jsonResults = null;
@@ -189,15 +189,15 @@ public class AkazeImageFinder {
         logger.info("==> Image finder took: " + difference + " secs.");
 
         if (checkFoundImageDimensions(top_left, top_right, bottom_left, bottom_right, tolerance)){
-        	return null;        	
+            return null;        	
         }
         if (checkFoundImageSizeRatio(initial_height, initial_width, top_left, top_right, bottom_left, bottom_right, initial_ratio, found_ratio1, found_ratio2, tolerance)){
-        	return null;        	
+            return null;        	
         }
 
         //calculate points in original orientation
         Point[] points = new Point[5];
-        
+
 
         if (rotationAngle == 1.0) {
             points[0] = new Point(scene_height / resizeFactor - bottom_left.y, bottom_left.x);
@@ -229,7 +229,7 @@ public class AkazeImageFinder {
         points[2] = new Point(points[2].x * resizeFactor, points[2].y * resizeFactor);
         points[3] = new Point(points[3].x * resizeFactor, points[3].y * resizeFactor);
         points[4] = centerOriginal;
-        
+
         logger.info("Image found at coordinates: " + (int) points[4].x + ", " + (int) points[4].y + " on screen.");
         logger.info("All corners: " + points[0].toString() + " " + points[1].toString() + " " + points[2].toString() + " " + points[4].toString());
 
@@ -240,26 +240,26 @@ public class AkazeImageFinder {
         location.setBottomLeft(points[3]);
         location.setCenter(centerOriginal);
         location.setResizeFactor(resizeFactor);
-        
+
         return location;
     }
 
     protected void cropImage(ImageSearchResult imageDto) {
-    	double x = imageDto.getImageLocation().getTopLeft().x;
-    	double y = imageDto.getImageLocation().getTopLeft().y;
-    	double width = imageDto.getImageLocation().getWidth();
-    	double height = imageDto.getImageLocation().getHeight();
-    	String scene_filename = imageDto.getScreenshotFile();
-    	int scaleFactor = imageDto.getImageLocation().getScaleFactor();
-    	double resizeFactor = imageDto.getImageLocation().getResizeFactor();
-    	
+        double x = imageDto.getImageLocation().getTopLeft().x;
+        double y = imageDto.getImageLocation().getTopLeft().y;
+        double width = imageDto.getImageLocation().getWidth();
+        double height = imageDto.getImageLocation().getHeight();
+        String scene_filename = imageDto.getScreenshotFile();
+        int scaleFactor = imageDto.getImageLocation().getScaleFactor();
+        double resizeFactor = imageDto.getImageLocation().getResizeFactor();
+
         Mat img_object = Highgui.imread(scene_filename);
-        
-		int x_resized = (int) (x / resizeFactor)*scaleFactor;
-		int y_resized = (int) (y / resizeFactor)*scaleFactor;
-		int width_resized = (int) (width / resizeFactor)*scaleFactor;
-		int height_resized = (int) (height / resizeFactor)*scaleFactor;
-		Rect croppedRect = new Rect(x_resized, y_resized, width_resized, height_resized);
+
+        int x_resized = (int) (x / resizeFactor)*scaleFactor;
+        int y_resized = (int) (y / resizeFactor)*scaleFactor;
+        int width_resized = (int) (width / resizeFactor)*scaleFactor;
+        int height_resized = (int) (height / resizeFactor)*scaleFactor;
+        Rect croppedRect = new Rect(x_resized, y_resized, width_resized, height_resized);
         log(img_object.toString());
         log(croppedRect.toString());
         Mat croppedImage = new Mat(img_object, croppedRect);

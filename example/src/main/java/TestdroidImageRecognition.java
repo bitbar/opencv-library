@@ -29,18 +29,18 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
     }
 
     public ImageLocation findImageOnScreen(String image) throws Exception {
-    	ImageRecognitionSettings defaultSettings = new ImageRecognitionSettings();
-    	return findImageOnScreen(image, defaultSettings).getImageLocation();
+        ImageRecognitionSettings defaultSettings = new ImageRecognitionSettings();
+        return findImageOnScreen(image, defaultSettings).getImageLocation();
     }
-    
+
     public ImageSearchResult findImageOnScreen(String imageName, ImageRecognitionSettings settings) throws Exception { 
-    	// queryImageFolder is "", unless set by setQueryImageFolder()
+        // queryImageFolder is "", unless set by setQueryImageFolder()
         String queryImageFolder = "queryimages/" + queryImageSubFolder;
         String screenshotsFolder = "target/reports/screenshots/";
         String imageFile = queryImageFolder+imageName;
         log("Searching for: "+imageFile);
         Dimension screenSize = ImageRecognition.getScreenSize(platform, driver);
-    	ImageSearchResult foundImage = ImageRecognition.findImageOnScreen(imageFile, screenshotsFolder, settings, screenSize, platform);
+        ImageSearchResult foundImage = ImageRecognition.findImageOnScreen(imageFile, screenshotsFolder, settings, screenSize, platform);
         return foundImage;
     }
 
@@ -49,23 +49,23 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
         String screenshotsFolder = "target/reports/screenshots/";
         Dimension screenSize = ImageRecognition.getScreenSize(platform, driver);
         String imageFile = queryImageFolder+image;
-		boolean hasImageDisappeared = ImageRecognition.hasImageDissappearedFromScreenBeforeTimeout(imageFile, screenshotsFolder, screenSize, platform);
-		assert(hasImageDisappeared);
+        boolean hasImageDisappeared = ImageRecognition.hasImageDissappearedFromScreenBeforeTimeout(imageFile, screenshotsFolder, screenSize, platform);
+        assert(hasImageDisappeared);
     }
 
 
     public String grabTextFromImage(String image) throws Exception {
-    	ImageSearchResult imageSearch = findAndCropImage(image);
+        ImageSearchResult imageSearch = findAndCropImage(image);
         String text = ImageRecognition.getTextStringFromImage(imageSearch.getScreenshotFile());
-		return text;
+        return text;
     }
 
-	public ImageSearchResult findAndCropImage(String image) throws Exception {
-		ImageRecognitionSettings settings = new ImageRecognitionSettings();
-    	settings.setCrop(true);
-    	ImageSearchResult imageSearch = findImageOnScreen(image, settings);
-		return imageSearch;
-	}
+    public ImageSearchResult findAndCropImage(String image) throws Exception {
+        ImageRecognitionSettings settings = new ImageRecognitionSettings();
+        settings.setCrop(true);
+        ImageSearchResult imageSearch = findImageOnScreen(image, settings);
+        return imageSearch;
+    }
 
 
 }

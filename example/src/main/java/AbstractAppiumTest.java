@@ -46,13 +46,13 @@ public abstract class AbstractAppiumTest {
             appFile = "application.ipa";
         }
         if (platform == null) {
-        	platform = PlatformType.IOS;
+            platform = PlatformType.IOS;
         }
         if (deviceName == null){
-        	deviceName = "device";
+            deviceName = "device";
         }
         if (platformVersion == null){
-        	platformVersion = "";
+            platformVersion = "";
         }
         // Use default "appium" automation for iOS
         automationName = "appium";
@@ -93,13 +93,13 @@ public abstract class AbstractAppiumTest {
             appFile = "application.apk";
         }
         if (platform == null) {
-        	platform = PlatformType.ANDROID;
+            platform = PlatformType.ANDROID;
         }
         if (deviceName == null){
             deviceName = "device";
         }
         if (automationName == null){
-        	automationName = "appium";
+            automationName = "appium";
         }
         screenshotsFolder = "target/reports/screenshots/android/";
         File dir = new File(screenshotsFolder);
@@ -169,6 +169,6 @@ public abstract class AbstractAppiumTest {
         logger.info(message);
     }
 
-    
+
 
 }

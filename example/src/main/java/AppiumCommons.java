@@ -12,8 +12,8 @@ import io.appium.java_client.AppiumDriver;
 import io.appium.java_client.MobileElement;
 
 public class AppiumCommons {
-	private static Logger logger = LoggerFactory.getLogger(AppiumCommons.class);
-	
+    private static Logger logger = LoggerFactory.getLogger(AppiumCommons.class);
+
     public static void hideKeyboard(AppiumDriver<MobileElement> driver) {
         try {
             driver.hideKeyboard();
@@ -22,18 +22,18 @@ public class AppiumCommons {
             logger.debug(e.toString());
         }
     }
-    
+
     public static void takeAppiumScreenshot(AppiumDriver<MobileElement> driver, String fullFileName) {
-		File scrFile = driver.getScreenshotAs(OutputType.FILE);
-		try {
-			File testScreenshot = new File(fullFileName);
-			FileUtils.copyFile(scrFile, testScreenshot);
-			logger.info("Screenshot stored to {}", testScreenshot.getAbsolutePath());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-	
+        File scrFile = driver.getScreenshotAs(OutputType.FILE);
+        try {
+            File testScreenshot = new File(fullFileName);
+            FileUtils.copyFile(scrFile, testScreenshot);
+            logger.info("Screenshot stored to {}", testScreenshot.getAbsolutePath());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void swipeUp(AppiumDriver<MobileElement> driver) {
         swipeUp(driver, 0.15f, 0.15f);
     }
@@ -140,5 +140,5 @@ public class AppiumCommons {
                 center.getY(),
                 duration);
     }
-	
+
 }

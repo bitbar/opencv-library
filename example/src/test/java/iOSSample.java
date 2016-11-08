@@ -30,7 +30,7 @@ public class iOSSample extends TestdroidImageRecognition {
 
     @BeforeClass
     public static void setUp() throws Exception {
-    	ImageRecognition.setUp();
+        ImageRecognition.setUp();
         driver = getIOSDriver();
     }
 
@@ -50,13 +50,13 @@ public class iOSSample extends TestdroidImageRecognition {
         log("Image Recognition sample script started.");
 
         try {
-          driver.hideKeyboard();
+            driver.hideKeyboard();
         } catch (Exception e) {
-          log("Keyboard not present; going forward.");
+            log("Keyboard not present; going forward.");
         }
 
         findAndCropImage("test.png");
-//        waitForImageToDisappearFromScreen("bitbar_logo.png");
+        //        waitForImageToDisappearFromScreen("bitbar_logo.png");
         log("Success.");
     }
 }
