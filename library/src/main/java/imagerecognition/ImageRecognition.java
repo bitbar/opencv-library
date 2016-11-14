@@ -26,7 +26,7 @@ public class ImageRecognition {
         logger.info(message);
     }
 
-    public static void setUp(){
+    static {
         AkazeImageFinder.setupOpenCVEnv();
     }
 

@@ -33,7 +33,6 @@ public class AndroidSample extends TestdroidImageRecognition {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        ImageRecognition.setUp();
         driver = getAndroidDriver();
     }
 

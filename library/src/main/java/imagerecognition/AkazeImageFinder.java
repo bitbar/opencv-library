@@ -377,16 +377,13 @@ public class AkazeImageFinder {
     }
 
     protected static void setupOpenCVEnv() {
-        String platformName = System.getProperty("os.name");
-        logger.info(platformName);
-        if (platformName.toLowerCase().contains("mac")) {
-            System.setProperty("java.library.path", System.getProperty("java.library.path") + File.pathSeparator + System.getProperty("user.dir") + "/lib/mac/opencv");
-        } else if (platformName.toLowerCase().contains("win")) {
-            System.setProperty("java.library.path", System.getProperty("java.library.path") + File.pathSeparator + System.getProperty("user.dir") + "/lib/win/opencv");
-        } else {
-            System.setProperty("java.library.path", System.getProperty("java.library.path") + File.pathSeparator + System.getProperty("user.dir") + "/lib/linux/opencv/java7");
-        }
+        addOpenCvToJavaLibraryPath();
+        setSysPathAccessible();
+        logger.info("java.library.path: " + System.getProperty("java.library.path"));
+        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+    }
 
+    private static void setSysPathAccessible() {
         Field fieldSysPath = null;
         try {
             fieldSysPath = ClassLoader.class.getDeclaredField("sys_paths");
@@ -398,8 +395,18 @@ public class AkazeImageFinder {
             fieldSysPath.set(null, null);
         } catch (IllegalAccessException e) {
         }
-        logger.info("java.library.path: " + System.getProperty("java.library.path"));
-        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+    }
+
+    private static void addOpenCvToJavaLibraryPath() {
+        String platformName = System.getProperty("os.name");
+        logger.info(platformName);
+        if (platformName.toLowerCase().contains("mac")) {
+            System.setProperty("java.library.path", System.getProperty("java.library.path") + File.pathSeparator + System.getProperty("user.dir") + "/lib/mac/opencv");
+        } else if (platformName.toLowerCase().contains("win")) {
+            System.setProperty("java.library.path", System.getProperty("java.library.path") + File.pathSeparator + System.getProperty("user.dir") + "/lib/win/opencv");
+        } else {
+            System.setProperty("java.library.path", System.getProperty("java.library.path") + File.pathSeparator + System.getProperty("user.dir") + "/lib/linux/opencv/java7");
+        }
     }
 
     private JSONObject getJsonObject(String filename) {

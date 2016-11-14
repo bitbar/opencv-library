@@ -30,7 +30,6 @@ public class iOSSample extends TestdroidImageRecognition {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        ImageRecognition.setUp();
         driver = getIOSDriver();
     }
 
@@ -56,7 +55,7 @@ public class iOSSample extends TestdroidImageRecognition {
         }
 
         findAndCropImage("test.png");
-        //        waitForImageToDisappearFromScreen("bitbar_logo.png");
         log("Success.");
     }
+    
 }
