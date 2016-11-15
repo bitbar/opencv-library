@@ -1,3 +1,4 @@
+dependency-reduced-pom.xml
 example/lib/image_recognition_library_test.jar
 target/
 testdroid.properties
