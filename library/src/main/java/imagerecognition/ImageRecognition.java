@@ -226,10 +226,7 @@ public class ImageRecognition {
     }
 
     private static void takeIDeviceScreenshot(String screenShotFilePath) throws Exception {
-        String udid = System.getenv("UDID");
-        if (udid==null){
-            throw new Exception("$UDID was null, set UDID environment variable and try again");
-        }
+        String udid = getIosUdid();
         String[] cmd = new String[]{"idevicescreenshot", "-u", udid, screenShotFilePath};
         Process p = Runtime.getRuntime().exec(cmd);
         BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -258,10 +255,13 @@ public class ImageRecognition {
     }
 
     private static Dimension getIosScreenSize() throws Exception {
-        String udid = System.getenv("UDID");
-        if (udid==null){
-            throw new Exception("$UDID was null, set UDID environment variable and try again");
-        }
+        String udid = getIosUdid();
+        String productType = getIosProductType(udid);
+        Dimension screenSize = getIosScreenSizePointsFromPropertiesFile(productType);
+        return screenSize;
+    }
+
+    private static String getIosProductType(String udid) throws IOException, InterruptedException, Exception {
         String[] cmd = new String[]{"ideviceinfo", "-u", udid, "--key", "ProductType"};
         Process p = Runtime.getRuntime().exec(cmd);
         BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -271,7 +271,18 @@ public class ImageRecognition {
             throw new Exception("ideviceinfo process exited with value: " + exitVal);
         }
         String productType = in.readLine();
-        
+        return productType;
+    }
+
+    private static String getIosUdid() throws Exception {
+        String udid = System.getenv("UDID");
+        if (udid==null){
+            throw new Exception("$UDID was null, set UDID environment variable and try again");
+        }
+        return udid;
+    }
+
+    private static Dimension getIosScreenSizePointsFromPropertiesFile(String productType) throws Exception {
         Properties screenSizeProperties = fetchProperties();
         String screenDimensionString = (String) screenSizeProperties.get(productType);
         if (screenDimensionString == null){
