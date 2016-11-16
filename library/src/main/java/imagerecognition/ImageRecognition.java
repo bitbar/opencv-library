@@ -277,12 +277,12 @@ public class ImageRecognition {
         if (screenDimensionString == null){
             throw new Exception("ios-screen-size.properties is missing entry for: " + productType);
         }
-        String screenDimensions[] = screenDimensionString.split("x");
+        String screenDimensions[] = screenDimensionString.split(" x ");
         if (screenDimensions.length!=2){
             throw new Exception("Invalid ios-screen-size.properties file syntax for line: " + productType);
         }
-        int height = Integer.parseInt(screenDimensions[0]);
-        int width = Integer.parseInt(screenDimensions[1]);
+        int width = Integer.parseInt(screenDimensions[0]);
+        int height = Integer.parseInt(screenDimensions[1]);
         return new Dimension(width, height);
     }
     
