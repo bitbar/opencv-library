@@ -39,17 +39,15 @@ public class TestdroidImageRecognition extends AbstractAppiumTest {
         String screenshotsFolder = "target/reports/screenshots/";
         String imageFile = queryImageFolder+imageName;
         log("Searching for: "+imageFile);
-        Dimension screenSize = ImageRecognition.getScreenSize(platform, driver);
-        ImageSearchResult foundImage = ImageRecognition.findImageOnScreen(imageFile, screenshotsFolder, settings, screenSize, platform);
+        ImageSearchResult foundImage = ImageRecognition.findImageOnScreen(imageFile, screenshotsFolder, settings, platform);
         return foundImage;
     }
 
     public void waitForImageToDisappearFromScreen(String image) throws Exception {
         String queryImageFolder = "queryimages/" + queryImageSubFolder;
         String screenshotsFolder = "target/reports/screenshots/";
-        Dimension screenSize = ImageRecognition.getScreenSize(platform, driver);
         String imageFile = queryImageFolder+image;
-        boolean hasImageDisappeared = ImageRecognition.hasImageDissappearedFromScreenBeforeTimeout(imageFile, screenshotsFolder, screenSize, platform);
+        boolean hasImageDisappeared = ImageRecognition.hasImageDissappearedFromScreenBeforeTimeout(imageFile, screenshotsFolder, platform);
         assert(hasImageDisappeared);
     }
 

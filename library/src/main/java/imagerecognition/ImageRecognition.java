@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Properties;
 
 import org.apache.commons.io.FilenameUtils;
 import org.opencv.core.Point;
@@ -11,8 +12,6 @@ import org.openqa.selenium.Dimension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.appium.java_client.AppiumDriver;
-import io.appium.java_client.MobileElement;
 import objects.ImageLocation;
 import objects.ImageRecognitionSettings;
 import objects.ImageSearchResult;
@@ -30,17 +29,27 @@ public class ImageRecognition {
         AkazeImageFinder.setupOpenCVEnv();
     }
 
-    public static ImageLocation findImage(String searchedImageFilePath, String sceneImageFilePath, PlatformType platform, Dimension screenSize) throws Exception {
+    public static ImageLocation findImage(String searchedImageFilePath, String sceneImageFilePath, PlatformType platform) throws Exception {
         ImageRecognitionSettings setting = new ImageRecognitionSettings();
-        return findImage(searchedImageFilePath, sceneImageFilePath, setting, platform, screenSize);
+        return findImage(searchedImageFilePath, sceneImageFilePath, setting, platform);
     }
-
-    public static ImageLocation findImage(String searchedImageFilePath, String sceneImageFilePath, ImageRecognitionSettings settings, PlatformType platform, Dimension screenSize) throws Exception {
+    
+    public static ImageLocation findImage(String searchedImageFilePath, String sceneImageFilePath, ImageRecognitionSettings settings, PlatformType platform) throws Exception {
         log("Searching for " + searchedImageFilePath);
         log("Searching in " + sceneImageFilePath);
         ImageLocation imgLocation = imageFinder.findImage(searchedImageFilePath, sceneImageFilePath, settings.getTolerance());
 
         if (imgLocation != null) {
+            Dimension screenSize = getScreenSize(platform);
+            double sceneHeight = imageFinder.getSceneHeight(sceneImageFilePath);
+            double sceneWidth = imageFinder.getSceneWidth(sceneImageFilePath);
+            int screenHeight = screenSize.getHeight();
+            int screenWidth = screenSize.getWidth();
+            
+            System.out.println("TESTAS");
+            System.out.println(sceneHeight+" vs "+screenHeight);
+            System.out.println(sceneWidth+" vs "+screenWidth);
+            
             if (platform.equals(PlatformType.IOS)) {
                 imgLocation = scaleImageRectangleForIos(screenSize, imgLocation, sceneImageFilePath);
             }
@@ -96,14 +105,14 @@ public class ImageRecognition {
 
 
     public static boolean hasImageDissappearedFromScreenBeforeTimeout(String searchedImageFilePath,
-            String screenshotBaseDirectory, Dimension screenSize, PlatformType platform) throws Exception {
+            String screenshotBaseDirectory, PlatformType platform) throws Exception {
         log("==> Trying to find image: " + searchedImageFilePath);
         int retry_counter=0;
         long start = System.nanoTime();
         while (((System.nanoTime() - start) / 1e6 / 1000 < 300)) {
             String screenshotName = FilenameUtils.getBaseName(searchedImageFilePath) + "_screenshot_"+retry_counter;
             String screenShotFile = ImageRecognition.takeScreenshot(screenshotName, screenshotBaseDirectory, platform);
-            if ((findImage(searchedImageFilePath, screenShotFile, platform, screenSize)) == null) {
+            if ((findImage(searchedImageFilePath, screenShotFile, platform)) == null) {
                 log("Image has successfully disappeared from screen.");
                 return true;
             }
@@ -137,8 +146,8 @@ public class ImageRecognition {
 
 
 
-    public static ImageSearchResult findImageOnScreen(String searchedImagePath, String screenshotBaseDirectory, ImageRecognitionSettings settings, Dimension screenSize, PlatformType platform) throws InterruptedException, IOException, Exception {
-        ImageSearchResult imageSearchResult = findImageLoop(searchedImagePath, screenshotBaseDirectory, settings, screenSize, platform);
+    public static ImageSearchResult findImageOnScreen(String searchedImagePath, String screenshotBaseDirectory, ImageRecognitionSettings settings, PlatformType platform) throws InterruptedException, IOException, Exception {
+        ImageSearchResult imageSearchResult = findImageLoop(searchedImagePath, screenshotBaseDirectory, settings, platform);
         if (imageSearchResult.isFound() && settings.isCrop()) {
             log("Cropping image..");
             imageFinder.cropImage(imageSearchResult);
@@ -147,14 +156,14 @@ public class ImageRecognition {
         return imageSearchResult;
     }
 
-    private static ImageSearchResult findImageLoop(String searchedImagePath, String screenshotBaseDirectory, ImageRecognitionSettings settings, Dimension screenSize, PlatformType platform) throws InterruptedException, IOException, Exception {
+    private static ImageSearchResult findImageLoop(String searchedImagePath, String screenshotBaseDirectory, ImageRecognitionSettings settings, PlatformType platform) throws InterruptedException, IOException, Exception {
         long start_time = System.nanoTime();
         ImageSearchResult imageSearchResult = new ImageSearchResult();
         String imageName = FilenameUtils.getBaseName(searchedImagePath);
         for (int i = 0; i < settings.getRetries(); i++) {
             String screenshotName = imageName + "_screenshot_"+i;
             String screenshotFile = takeScreenshot(screenshotName,screenshotBaseDirectory, platform);
-            ImageLocation imageLocation = ImageRecognition.findImage(searchedImagePath, screenshotFile, settings, platform, screenSize);
+            ImageLocation imageLocation = ImageRecognition.findImage(searchedImagePath, screenshotFile, settings, platform);
             if (imageLocation!=null){
                 long end_time = System.nanoTime();
                 int difference = (int) ((end_time - start_time) / 1e6 / 1000);
@@ -240,16 +249,67 @@ public class ImageRecognition {
         }
     }
     
-    
-
-    // TODO remove this and make private when a way is found to get the screen size for iOS without the appium driver
-    // and then remove the screen size parameter from other methods
-    public static Dimension getScreenSize(PlatformType platform, AppiumDriver<MobileElement> driver) throws Exception {
+    private static Dimension getScreenSize(PlatformType platform) throws Exception {
         if (platform.equals(PlatformType.IOS)) {
-            return driver.manage().window().getSize();
+            return getIosScreenSize();
         } else {
             return getAndroidScreenSize();
         }
+    }
+
+    private static Dimension getIosScreenSize() throws Exception {
+        String udid = System.getenv("UDID");
+        if (udid==null){
+            throw new Exception("$UDID was null, set UDID environment variable and try again");
+        }
+        String[] cmd = new String[]{"ideviceinfo", "-u", udid, "--key", "ProductType"};
+        Process p = Runtime.getRuntime().exec(cmd);
+        BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+        int exitVal = p.waitFor();
+        if (exitVal != 0) {
+            throw new Exception("ideviceinfo process exited with value: " + exitVal);
+        }
+        String productType = in.readLine();
+        
+        Properties screenSizeProperties = fetchProperties();
+        String screenDimensionString = (String) screenSizeProperties.get(productType);
+        if (screenDimensionString == null){
+            throw new Exception("ios-screen-size.properties is missing entry for: " + productType);
+        }
+        String screenDimensions[] = screenDimensionString.split("x");
+        if (screenDimensions.length!=2){
+            throw new Exception("Invalid ios-screen-size.properties file syntax for line: " + productType);
+        }
+        int height = Integer.parseInt(screenDimensions[0]);
+        int width = Integer.parseInt(screenDimensions[1]);
+        return new Dimension(width, height);
+    }
+    
+    private static Properties fetchProperties() throws Exception {
+        Properties iosScreenSizeProperties = new Properties();
+        InputStream input = null;
+        try {
+            String filename = "ios-screen-size.properties";
+            input = ImageRecognition.class.getClassLoader().getResourceAsStream(filename);
+            
+            if (input == null) {
+                throw new Exception("ios-screen-size.properties does not exist");
+            }
+            iosScreenSizeProperties.load(input);
+
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        } finally {
+            if (input != null) {
+                try {
+                    input.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return iosScreenSizeProperties;
     }
 
     private static Dimension getAndroidScreenSize() throws IOException, InterruptedException {
