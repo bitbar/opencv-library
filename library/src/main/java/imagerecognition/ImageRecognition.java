@@ -46,10 +46,6 @@ public class ImageRecognition {
             int screenHeight = screenSize.getHeight();
             int screenWidth = screenSize.getWidth();
             
-            System.out.println("TESTAS");
-            System.out.println(sceneHeight+" vs "+screenHeight);
-            System.out.println(sceneWidth+" vs "+screenWidth);
-            
             if (platform.equals(PlatformType.IOS)) {
                 imgLocation = scaleImageRectangleForIos(screenSize, imgLocation, sceneImageFilePath);
             }
