@@ -9,3 +9,5 @@ application.apk
 *.classpath
 *.project
 *.settings/
+.DS_Store
+

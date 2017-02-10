@@ -41,7 +41,7 @@ Run Appium:
 ```
 cd library
 mvn package
-cp target/image-recognition-library-2.0-SNAPSHOT.jar ../example/lib/image_recognition_library_test.jar
+mvn install:install-file -Dfile=target/mobile-opencv-image-recognition-library-1.0-SNAPSHOT.jar -DpomFile=pom.xml -Djavadoc=target/mobile-opencv-image-recognition-library-1.0-SNAPSHOT-javadoc.jar -Dsources=target/mobile-opencv-image-recognition-library-1.0-SNAPSHOT-sources.jar
 cd ../example
 
 # Install OpenCV (change path according to your platform)

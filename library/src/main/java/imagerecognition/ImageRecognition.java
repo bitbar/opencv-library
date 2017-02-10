@@ -29,11 +29,29 @@ public class ImageRecognition {
         AkazeImageFinder.setupOpenCVEnv();
     }
 
+    
+    /**
+     * Find the location of the reference image on the screen
+     *
+     * @param  searchedImageFilePath Path to the reference image file to be searched
+     * @param  sceneImageFilePath Path to the scene file in which the image is going to be searched for
+     * @param  platform Defines the platform (phone operating system) that is in use. PlatformType.ANDROID for Android and PlatformType.IOS for iOS
+     * @return Returns the location of the image or null if image has not been found
+     */
     public static ImageLocation findImage(String searchedImageFilePath, String sceneImageFilePath, PlatformType platform) throws Exception {
         ImageRecognitionSettings setting = new ImageRecognitionSettings();
         return findImage(searchedImageFilePath, sceneImageFilePath, setting, platform);
     }
     
+    /**
+     * Find the location of the reference image on the screen
+     * @param searchedImageFilePath Path to the reference image file to be searched
+     * @param sceneImageFilePath Path to the scene file in which the image is going to be searched for
+     * @param settings Image recognition related settings
+     * @param platform Defines the platform (phone operating system) that is in use. PlatformType.ANDROID for Android and PlatformType.IOS for iOS
+     * @return Returns the location of the image or null if image has not been found
+     * @throws Exception
+     */
     public static ImageLocation findImage(String searchedImageFilePath, String sceneImageFilePath, ImageRecognitionSettings settings, PlatformType platform) throws Exception {
         log("Searching for " + searchedImageFilePath);
         log("Searching in " + sceneImageFilePath);
@@ -95,6 +113,15 @@ public class ImageRecognition {
     }
 
 
+    /**
+     * Checks whether image disappears from screen before a predefined timeout.
+     * 
+     * @param searchedImageFilePath Path to the reference image file to be searched
+     * @param screenshotBaseDirectory Path to the directory in which the screenshots should be stored
+     * @param platform Defines the platform (phone operating system) that is in use. PlatformType.ANDROID for Android and PlatformType.IOS for iOS
+     * @return True if the image cannot be found or disappears successfully. False if the image can be found and the function timeouts.
+     * @throws Exception
+     */
     public static boolean hasImageDissappearedFromScreenBeforeTimeout(String searchedImageFilePath,
             String screenshotBaseDirectory, PlatformType platform) throws Exception {
         log("==> Trying to find image: " + searchedImageFilePath);
@@ -114,6 +141,12 @@ public class ImageRecognition {
         return false;
     }
 
+    /**
+     * Extract text from an image.
+     * 
+     * @param imageInput Path to the image file in which a text should be found
+     * @return The found text in the image.
+     */
     public static String getTextStringFromImage(String imageInput) {
         String[] tesseractCommand = {"tesseract", imageInput, "stdout"};
         String value = "";
@@ -137,8 +170,18 @@ public class ImageRecognition {
 
 
 
-    public static ImageSearchResult findImageOnScreen(String searchedImagePath, String screenshotBaseDirectory, ImageRecognitionSettings settings, PlatformType platform) throws InterruptedException, IOException, Exception {
-        ImageSearchResult imageSearchResult = findImageLoop(searchedImagePath, screenshotBaseDirectory, settings, platform);
+    /**
+     * @param searchedImageFilePath Path to the reference image file to be searched
+     * @param screenshotBaseDirectory Path to the directory in which the screenshots should be stored
+     * @param settings Image recognition related settings
+     * @param platform Defines the platform (phone operating system) that is in use. PlatformType.ANDROID for Android and PlatformType.IOS for iOS
+     * @return ImageSearchResult, an object containing information about the location of the found image and a screenshot from the moment the reference image was found.
+     * @throws InterruptedException
+     * @throws IOException
+     * @throws Exception
+     */
+    public static ImageSearchResult findImageOnScreen(String searchedImageFilePath, String screenshotBaseDirectory, ImageRecognitionSettings settings, PlatformType platform) throws InterruptedException, IOException, Exception {
+        ImageSearchResult imageSearchResult = findImageLoop(searchedImageFilePath, screenshotBaseDirectory, settings, platform);
         if (imageSearchResult.isFound() && settings.isCrop()) {
             log("Cropping image..");
             imageFinder.cropImage(imageSearchResult);

@@ -8,10 +8,8 @@
     <dependencies>
         <dependency>
             <groupId>com.testdroid</groupId>
-            <artifactId>image-recognition-library</artifactId>
+            <artifactId>mobile-opencv-image-recognition-library</artifactId>
             <version>1.0-SNAPSHOT</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/image_recognition_library_test.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -60,6 +58,14 @@
                 <version>2.19.1</version>
                 <configuration>
                     <reportsDirectory>${project.build.directory}/reports/junit</reportsDirectory>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-eclipse-plugin</artifactId>
+                <configuration>
+                    <downloadSources>true</downloadSources>
+                    <downloadJavadocs>true</downloadJavadocs>
                 </configuration>
             </plugin>
         </plugins>
