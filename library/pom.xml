@@ -4,7 +4,25 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.testdroid</groupId>
     <artifactId>image-recognition-library</artifactId>
-    <version>2.0-SNAPSHOT</version>
+    <version>0.1</version>
+    <packaging>jar</packaging>
+
+    <name>OpenCV Mobile Image Recognition Library</name>
+    <description>Library for image recognition that can be used in mobile testing with for example Appium</description>
+    <url></url>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>https://github.com/severi/opencv_library</url>
+    </scm>
+
     <dependencies>
         <dependency>
             <groupId>net.sourceforge.tess4j</groupId>
