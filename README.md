@@ -45,7 +45,7 @@ cp target/image-recognition-library-2.0-SNAPSHOT.jar ../example/lib/image_recogn
 cd ../example
 
 # Install OpenCV (change path according to your platform)
-mvn install:install-file -Dfile=lib/linux/opencv/java7/opencv-2413.jar -DgroupId=opencv -DartifactId=opencv -Dversion=2.4.13 -Dpackaging=jar
+mvn install:install-file -Dfile=lib/linux/opencv/opencv-2413.jar -DgroupId=opencv -DartifactId=opencv -Dversion=2.4.13 -Dpackaging=jar
 	
 # Download the example Android application
 wget https://github.com/bitbar/testdroid-samples/blob/master/apps/builds/BitbarSampleApp.apk -O application.apk

@@ -41,11 +41,6 @@ public class ImageRecognition {
 
         if (imgLocation != null) {
             Dimension screenSize = getScreenSize(platform);
-            double sceneHeight = imageFinder.getSceneHeight(sceneImageFilePath);
-            double sceneWidth = imageFinder.getSceneWidth(sceneImageFilePath);
-            int screenHeight = screenSize.getHeight();
-            int screenWidth = screenSize.getWidth();
-            
             if (platform.equals(PlatformType.IOS)) {
                 imgLocation = scaleImageRectangleForIos(screenSize, imgLocation, sceneImageFilePath);
             }
