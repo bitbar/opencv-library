@@ -53,6 +53,3 @@ wget https://github.com/bitbar/testdroid-samples/blob/master/apps/builds/BitbarI
 export UDID=<iPhone udid>
 mvn -Dtest=iOSSample clean test
 ```
-
-# Deploying a new version of the library
-See <http://stackoverflow.com/questions/14013644/hosting-a-maven-repository-on-github>
