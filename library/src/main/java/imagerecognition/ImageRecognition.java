@@ -58,7 +58,7 @@ public class ImageRecognition {
         ImageLocation imgLocation = imageFinder.findImage(searchedImageFilePath, sceneImageFilePath, settings.getTolerance());
 
         if (imgLocation != null) {
-            Dimension screenSize = getScreenSize(platform);
+            Dimension screenSize = getScreenSize(platform, sceneImageFilePath);
             if (platform.equals(PlatformType.IOS)) {
                 imgLocation = scaleImageRectangleForIos(screenSize, imgLocation, sceneImageFilePath);
             }
@@ -280,19 +280,28 @@ public class ImageRecognition {
         }
     }
     
-    private static Dimension getScreenSize(PlatformType platform) throws Exception {
+    private static Dimension getScreenSize(PlatformType platform, String sceneImageFilePath) throws Exception {
         if (platform.equals(PlatformType.IOS)) {
-            return getIosScreenSize();
+            return getIosScreenSize(sceneImageFilePath);
         } else {
             return getAndroidScreenSize();
         }
     }
 
-    private static Dimension getIosScreenSize() throws Exception {
+    private static Dimension getIosScreenSize(String sceneImageFilePath) throws Exception {
         String udid = getIosUdid();
         String productType = getIosProductType(udid);
-        Dimension screenSize = getIosScreenSizePointsFromPropertiesFile(productType);
-        return screenSize;
+        try {
+            Dimension screenSize = getIosScreenSizePointsFromPropertiesFile(productType);
+            return screenSize;
+        } catch(UnsupportedOperationException e){
+            logger.warn("Current device not included in the ios-screen-size.properties-file. Assuming x3 Retina display.");
+            logger.warn("Add the devices screen size information to the ios-screen-size.properties-file");
+            int screenHeight = (int) (imageFinder.getSceneHeight(sceneImageFilePath)/3);
+            int screenWidth = (int) (imageFinder.getSceneWidth(sceneImageFilePath)/3);
+            Dimension screenSize = new Dimension(screenWidth, screenHeight);
+            return screenSize;
+        }
     }
 
     private static String getIosProductType(String udid) throws IOException, InterruptedException, Exception {
@@ -316,11 +325,11 @@ public class ImageRecognition {
         return udid;
     }
 
-    private static Dimension getIosScreenSizePointsFromPropertiesFile(String productType) throws Exception {
+    private static Dimension getIosScreenSizePointsFromPropertiesFile(String productType) throws UnsupportedOperationException, Exception {
         Properties screenSizeProperties = fetchProperties();
         String screenDimensionString = (String) screenSizeProperties.get(productType);
         if (screenDimensionString == null){
-            throw new Exception("ios-screen-size.properties is missing entry for: " + productType);
+            throw new UnsupportedOperationException("ios-screen-size.properties is missing entry for: " + productType);
         }
         String screenDimensions[] = screenDimensionString.split(" x ");
         if (screenDimensions.length!=2){
