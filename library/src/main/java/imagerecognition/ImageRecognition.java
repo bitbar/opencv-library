@@ -8,7 +8,7 @@ import java.util.Properties;
 
 import org.apache.commons.io.FilenameUtils;
 import org.opencv.core.Point;
-import org.openqa.selenium.Dimension;
+import org.opencv.core.Size;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,13 +58,13 @@ public class ImageRecognition {
         ImageLocation imgLocation = imageFinder.findImage(searchedImageFilePath, sceneImageFilePath, settings.getTolerance());
 
         if (imgLocation != null) {
-            Dimension screenSize = getScreenSize(platform, sceneImageFilePath);
+            Size screenSize = getScreenSize(platform, sceneImageFilePath);
             if (platform.equals(PlatformType.IOS)) {
                 imgLocation = scaleImageRectangleForIos(screenSize, imgLocation, sceneImageFilePath);
             }
             Point center = imgLocation.getCenter();
             if (!isPointInsideScreenBounds(center, screenSize)) {
-                log("Screen size is (width, height): " + screenSize.getWidth() + ", " + screenSize.getHeight());
+                log("Screen size is (width, height): " + screenSize.width + ", " + screenSize.height);
                 log("WARNING: Coordinates found do not match the screen --> image not found.");
                 imgLocation = null;
             }
@@ -72,12 +72,12 @@ public class ImageRecognition {
         return imgLocation;
     }
 
-    private static ImageLocation scaleImageRectangleForIos(Dimension screenSize, ImageLocation imageLocation, String sceneImageFilePath) {
+    private static ImageLocation scaleImageRectangleForIos(Size screenSize, ImageLocation imageLocation, String sceneImageFilePath) {
         //for retina devices we need to recalculate coordinates
         double sceneHeight = imageFinder.getSceneHeight(sceneImageFilePath);
         double sceneWidth = imageFinder.getSceneWidth(sceneImageFilePath);
-        int screenHeight = screenSize.getHeight();
-        int screenWidth = screenSize.getWidth();
+        int screenHeight = (int) screenSize.height;
+        int screenWidth = (int) screenSize.width;
 
         // Make sure screenshot size values are "landscape" for comparison
         if (sceneHeight > sceneWidth) {
@@ -108,7 +108,7 @@ public class ImageRecognition {
         return imageLocation;
     }
 
-    private static boolean isPointInsideScreenBounds(Point center, Dimension screenSize) {
+    private static boolean isPointInsideScreenBounds(Point center, Size screenSize) {
         return !((center.x >= screenSize.width) || (center.x < 0) || (center.y >= screenSize.height) || (center.y < 0));
     }
 
@@ -280,7 +280,7 @@ public class ImageRecognition {
         }
     }
     
-    private static Dimension getScreenSize(PlatformType platform, String sceneImageFilePath) throws Exception {
+    private static Size getScreenSize(PlatformType platform, String sceneImageFilePath) throws Exception {
         if (platform.equals(PlatformType.IOS)) {
             return getIosScreenSize(sceneImageFilePath);
         } else {
@@ -288,19 +288,17 @@ public class ImageRecognition {
         }
     }
 
-    private static Dimension getIosScreenSize(String sceneImageFilePath) throws Exception {
+    private static Size getIosScreenSize(String sceneImageFilePath) throws Exception {
         String udid = getIosUdid();
         String productType = getIosProductType(udid);
         try {
-            Dimension screenSize = getIosScreenSizePointsFromPropertiesFile(productType);
-            return screenSize;
+            return getIosScreenSizePointsFromPropertiesFile(productType);
         } catch(UnsupportedOperationException e){
             logger.warn("Current device not included in the ios-screen-size.properties-file. Assuming x3 Retina display.");
             logger.warn("Add the devices screen size information to the ios-screen-size.properties-file");
             int screenHeight = (int) (imageFinder.getSceneHeight(sceneImageFilePath)/3);
             int screenWidth = (int) (imageFinder.getSceneWidth(sceneImageFilePath)/3);
-            Dimension screenSize = new Dimension(screenWidth, screenHeight);
-            return screenSize;
+            return new Size(screenWidth, screenHeight);
         }
     }
 
@@ -313,8 +311,7 @@ public class ImageRecognition {
         if (exitVal != 0) {
             throw new Exception("ideviceinfo process exited with value: " + exitVal);
         }
-        String productType = in.readLine();
-        return productType;
+        return in.readLine();
     }
 
     private static String getIosUdid() throws Exception {
@@ -325,7 +322,7 @@ public class ImageRecognition {
         return udid;
     }
 
-    private static Dimension getIosScreenSizePointsFromPropertiesFile(String productType) throws UnsupportedOperationException, Exception {
+    private static Size getIosScreenSizePointsFromPropertiesFile(String productType) throws UnsupportedOperationException, Exception {
         Properties screenSizeProperties = fetchProperties();
         String screenDimensionString = (String) screenSizeProperties.get(productType);
         if (screenDimensionString == null){
@@ -337,7 +334,7 @@ public class ImageRecognition {
         }
         int width = Integer.parseInt(screenDimensions[0]);
         int height = Integer.parseInt(screenDimensions[1]);
-        return new Dimension(width, height);
+        return new Size(width, height);
     }
     
     private static Properties fetchProperties() throws Exception {
@@ -366,7 +363,7 @@ public class ImageRecognition {
         return iosScreenSizeProperties;
     }
 
-    private static Dimension getAndroidScreenSize() throws IOException, InterruptedException {
+    private static Size getAndroidScreenSize() throws IOException, InterruptedException {
         String adb = "adb";
         String[] adbCommand = {adb, "shell", "dumpsys", "window"};
         ProcessBuilder p = new ProcessBuilder(adbCommand);
@@ -374,7 +371,7 @@ public class ImageRecognition {
         InputStream stdin = proc.getInputStream();
         InputStreamReader isr = new InputStreamReader(stdin);
         BufferedReader br = new BufferedReader(isr);
-        String line = null;
+        String line;
         String[] size = null;
         while ((line = br.readLine()) != null) {
             if (!line.contains("OriginalmUnrestrictedScreen")) { //we do this check for devices with android 5.x+ The adb command returns an extra line with the values 0x0 which must be filtered out.
@@ -386,8 +383,7 @@ public class ImageRecognition {
         }
         int width = Integer.parseInt(size[0]);
         int height = Integer.parseInt(size[1]);
-        Dimension screenSize = new Dimension(width, height);
-        return screenSize;
+        return new Size(width, height);
     }
 
 

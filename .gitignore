@@ -1,7 +1,6 @@
 dependency-reduced-pom.xml
 example/lib/image_recognition_library_test.jar
 target/
-testdroid.properties
 run-tests.sh
 *.zip
 application.ipa
@@ -10,4 +9,5 @@ application.apk
 *.project
 *.settings/
 .DS_Store
-
+*.idea
+*.iml
