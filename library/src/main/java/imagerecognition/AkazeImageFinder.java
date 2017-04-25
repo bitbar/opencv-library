@@ -5,7 +5,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.*;
-import org.opencv.highgui.Highgui;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +15,6 @@ import objects.ImageLocation;
 import objects.ImageSearchResult;
 
 import java.io.*;
-import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.LinkedList;
@@ -28,22 +29,20 @@ public class AkazeImageFinder {
     private static final Logger logger = LoggerFactory.getLogger(AkazeImageFinder.class);
 
     protected double getSceneHeight(String sceneFile) {
-        Mat img_scene = Highgui.imread(sceneFile, Highgui.CV_LOAD_IMAGE_UNCHANGED);
-        double scene_height = img_scene.rows();
-        return scene_height;
+        Mat img_scene = Imgcodecs.imread(sceneFile, Imgcodecs.CV_LOAD_IMAGE_UNCHANGED);
+        return img_scene.rows();
     }
 
     protected double getSceneWidth(String sceneFile) {
-        Mat img_scene = Highgui.imread(sceneFile, Highgui.CV_LOAD_IMAGE_UNCHANGED);
-        double scene_width = img_scene.cols();
-        return scene_width;
+        Mat img_scene = Imgcodecs.imread(sceneFile, Imgcodecs.CV_LOAD_IMAGE_UNCHANGED);
+        return img_scene.cols();
     }
 
     protected ImageLocation findImage(String queryImageFile, String sceneFile, double tolerance) {
 
         long start_time = System.nanoTime();
-        Mat img_object = Highgui.imread(queryImageFile, Highgui.CV_LOAD_IMAGE_UNCHANGED);
-        Mat img_scene = Highgui.imread(sceneFile, Highgui.CV_LOAD_IMAGE_UNCHANGED);
+        Mat img_object = Imgcodecs.imread(queryImageFile, Imgcodecs.CV_LOAD_IMAGE_UNCHANGED);
+        Mat img_scene = Imgcodecs.imread(sceneFile, Imgcodecs.CV_LOAD_IMAGE_UNCHANGED);
 
 
         double scene_height = img_scene.rows();
@@ -60,8 +59,8 @@ public class AkazeImageFinder {
             Mat resized_img_scene = new Mat();
             Size size = new Size(scene_width / resizeFactor, scene_height / resizeFactor);
             resize(img_scene, resized_img_scene, size);
-            Highgui.imwrite(sceneFile, resized_img_scene);
-            img_scene = Highgui.imread(sceneFile, Highgui.CV_LOAD_IMAGE_UNCHANGED);
+            Imgcodecs.imwrite(sceneFile, resized_img_scene);
+            img_scene = Imgcodecs.imread(sceneFile, Imgcodecs.CV_LOAD_IMAGE_UNCHANGED);
             logger.info("Image was resized, resize factor is: " + resizeFactor);
         } else{
             resizeFactor = 1;        	
@@ -84,7 +83,7 @@ public class AkazeImageFinder {
         double initial_height = img_object.size().height;
         double initial_width = img_object.size().width;
 
-        Highgui.imwrite(sceneFile, img_scene);
+        Imgcodecs.imwrite(sceneFile, img_scene);
 
         //finding homography
         LinkedList<Point> objList = new LinkedList<Point>();
@@ -253,7 +252,7 @@ public class AkazeImageFinder {
         int scaleFactor = imageDto.getImageLocation().getScaleFactor();
         double resizeFactor = imageDto.getImageLocation().getResizeFactor();
 
-        Mat img_object = Highgui.imread(scene_filename);
+        Mat img_object = Imgcodecs.imread(scene_filename);
 
         int x_resized = (int) (x / resizeFactor)*scaleFactor;
         int y_resized = (int) (y / resizeFactor)*scaleFactor;
@@ -263,7 +262,7 @@ public class AkazeImageFinder {
         log(img_object.toString());
         log(croppedRect.toString());
         Mat croppedImage = new Mat(img_object, croppedRect);
-        Highgui.imwrite(scene_filename, croppedImage);
+        Imgcodecs.imwrite(scene_filename, croppedImage);
     }
 
     private Mat drawFoundHomography(Mat img_object, String filename, Mat h) {
@@ -277,14 +276,14 @@ public class AkazeImageFinder {
 
         Core.perspectiveTransform(obj_corners, scene_corners, h);
 
-        Mat img = Highgui.imread(filename, Highgui.CV_LOAD_IMAGE_COLOR);
+        Mat img = Imgcodecs.imread(filename, Imgcodecs.CV_LOAD_IMAGE_COLOR);
 
-        Core.line(img, new Point(scene_corners.get(0, 0)), new Point(scene_corners.get(1, 0)), new Scalar(0, 255, 0), 4);
-        Core.line(img, new Point(scene_corners.get(1, 0)), new Point(scene_corners.get(2, 0)), new Scalar(0, 255, 0), 4);
-        Core.line(img, new Point(scene_corners.get(2, 0)), new Point(scene_corners.get(3, 0)), new Scalar(0, 255, 0), 4);
-        Core.line(img, new Point(scene_corners.get(3, 0)), new Point(scene_corners.get(0, 0)), new Scalar(0, 255, 0), 4);
+        Imgproc.line(img, new Point(scene_corners.get(0, 0)), new Point(scene_corners.get(1, 0)), new Scalar(0, 255, 0), 4);
+        Imgproc.line(img, new Point(scene_corners.get(1, 0)), new Point(scene_corners.get(2, 0)), new Scalar(0, 255, 0), 4);
+        Imgproc.line(img, new Point(scene_corners.get(2, 0)), new Point(scene_corners.get(3, 0)), new Scalar(0, 255, 0), 4);
+        Imgproc.line(img, new Point(scene_corners.get(3, 0)), new Point(scene_corners.get(0, 0)), new Scalar(0, 255, 0), 4);
 
-        Highgui.imwrite(filename, img);
+        Imgcodecs.imwrite(filename, img);
 
         return scene_corners;
     }
@@ -377,40 +376,8 @@ public class AkazeImageFinder {
     }
 
     protected static void setupOpenCVEnv() {
-        addOpenCvToJavaLibraryPath();
-        setSysPathAccessible();
-        logger.info("java.library.path: " + System.getProperty("java.library.path"));
+        nu.pattern.OpenCV.loadShared();
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-    }
-
-    private static void setSysPathAccessible() {
-        Field fieldSysPath = null;
-        try {
-            fieldSysPath = ClassLoader.class.getDeclaredField("sys_paths");
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
-        }
-        fieldSysPath.setAccessible(true);
-        try {
-            fieldSysPath.set(null, null);
-        } catch (IllegalAccessException e) {
-        }
-    }
-
-    private static void addOpenCvToJavaLibraryPath() {
-        String platformName = System.getProperty("os.name");
-        logger.info(platformName);
-        if (platformName.toLowerCase().contains("mac")) {
-            System.setProperty("java.library.path", System.getProperty("java.library.path") + File.pathSeparator + System.getProperty("user.dir") + "/lib/mac/opencv");
-        } else if (platformName.toLowerCase().contains("win")) {
-            if (System.getProperty("os.arch").contains("64")) {
-                System.setProperty("java.library.path", System.getProperty("java.library.path") + File.pathSeparator + System.getProperty("user.dir") + "/lib/win/opencv/x64");
-            } else {
-                System.setProperty("java.library.path", System.getProperty("java.library.path") + File.pathSeparator + System.getProperty("user.dir") + "/lib/win/opencv/x86");
-            }
-        } else {
-            System.setProperty("java.library.path", System.getProperty("java.library.path") + File.pathSeparator + System.getProperty("user.dir") + "/lib/linux/opencv");
-        }
     }
 
     private JSONObject getJsonObject(String filename) {
