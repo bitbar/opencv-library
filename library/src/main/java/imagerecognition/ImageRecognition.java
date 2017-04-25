@@ -371,7 +371,7 @@ public class ImageRecognition {
         InputStream stdin = proc.getInputStream();
         InputStreamReader isr = new InputStreamReader(stdin);
         BufferedReader br = new BufferedReader(isr);
-        String line = null;
+        String line;
         String[] size = null;
         while ((line = br.readLine()) != null) {
             if (!line.contains("OriginalmUnrestrictedScreen")) { //we do this check for devices with android 5.x+ The adb command returns an extra line with the values 0x0 which must be filtered out.

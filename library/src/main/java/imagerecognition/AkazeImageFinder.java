@@ -49,7 +49,7 @@ public class AkazeImageFinder {
         double scene_width = img_scene.cols();
         //logger.info("Scene height and width: " + scene_height + ", " + scene_width);
 
-        double resizeFactor = 1;
+        double resizeFactor;
         if (scene_width < scene_height)
             resizeFactor = scene_width / 750;
         else
@@ -66,13 +66,10 @@ public class AkazeImageFinder {
             resizeFactor = 1;        	
         }
 
-        String jsonResults = null;
+        String jsonResults;
         try {
             jsonResults = runAkazeMatch(queryImageFile, sceneFile);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            return null;
-        } catch (IOException e) {
+        } catch (InterruptedException | IOException e) {
             e.printStackTrace();
             return null;
         }
@@ -86,14 +83,14 @@ public class AkazeImageFinder {
         Imgcodecs.imwrite(sceneFile, img_scene);
 
         //finding homography
-        LinkedList<Point> objList = new LinkedList<Point>();
-        LinkedList<Point> sceneList = new LinkedList<Point>();
+        LinkedList<Point> objList = new LinkedList<>();
+        LinkedList<Point> sceneList = new LinkedList<>();
         JSONObject jsonObject = getJsonObject(jsonResults);
         if (jsonObject == null) {
             logger.error("ERROR: Json file couldn't be processed. ");
             return null;
         }
-        JSONArray keypointsPairs = null;
+        JSONArray keypointsPairs;
         try {
             keypointsPairs = jsonObject.getJSONArray("keypoint-pairs");
         } catch (JSONException e) {
@@ -174,7 +171,7 @@ public class AkazeImageFinder {
         bottom_right = objectOnScene[2];
         bottom_left = objectOnScene[3];
 
-        double initial_ratio = 1.0;
+        double initial_ratio;
         if ((rotationAngle == 1.0) || (rotationAngle == -1.0)) {
             initial_ratio = initial_width / initial_height;
         } else {
@@ -269,10 +266,10 @@ public class AkazeImageFinder {
         Mat obj_corners = new Mat(4, 1, CvType.CV_32FC2);
         Mat scene_corners = new Mat(4, 1, CvType.CV_32FC2);
 
-        obj_corners.put(0, 0, new double[]{0, 0});
-        obj_corners.put(1, 0, new double[]{img_object.cols(), 0});
-        obj_corners.put(2, 0, new double[]{img_object.cols(), img_object.rows()});
-        obj_corners.put(3, 0, new double[]{0, img_object.rows()});
+        obj_corners.put(0, 0, 0, 0);
+        obj_corners.put(1, 0, img_object.cols(), 0);
+        obj_corners.put(2, 0, img_object.cols(), img_object.rows());
+        obj_corners.put(3, 0, 0, img_object.rows());
 
         Core.perspectiveTransform(obj_corners, scene_corners, h);
 
@@ -341,7 +338,7 @@ public class AkazeImageFinder {
         File file = new File(jsonFilename);
         file.getParentFile().mkdirs();
         String platformName = System.getProperty("os.name");
-        String akazePath = "";
+        String akazePath;
         if (platformName.toLowerCase().contains("mac")) {
             akazePath = "lib/mac/akaze/akaze_match";
         } else if (platformName.toLowerCase().contains("win")) {
@@ -357,8 +354,7 @@ public class AkazeImageFinder {
             InputStream stdin = proc.getInputStream();
             InputStreamReader isr = new InputStreamReader(stdin);
             BufferedReader br = new BufferedReader(isr);
-            String line = null;
-            while ((line = br.readLine()) != null)
+            while ((br.readLine()) != null)
                 System.out.print("");
             int exitVal = proc.waitFor();
             if (exitVal != 0)
@@ -382,16 +378,13 @@ public class AkazeImageFinder {
 
     private JSONObject getJsonObject(String filename) {
         File jsonFile = new File(filename);
-        InputStream is = null;
+        InputStream is;
         try {
             is = new FileInputStream(jsonFile);
             String jsonTxt = IOUtils.toString(is);
             return new JSONObject(jsonTxt);
 
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        } catch (JSONException e) {
+        } catch (IOException | JSONException e) {
             e.printStackTrace();
             return null;
         }
