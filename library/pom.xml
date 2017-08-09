@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.testdroid</groupId>
     <artifactId>mobile-opencv-image-recognition-library</artifactId>
-    <version>0.3.1</version>
+    <version>0.3.2</version>
     <packaging>jar</packaging>
     <name>OpenCV Mobile Image Recognition Library</name>
     <description>Library for image recognition that can be used in mobile testing with for example Appium</description>
