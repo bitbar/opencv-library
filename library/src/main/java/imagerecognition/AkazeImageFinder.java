@@ -354,8 +354,9 @@ public class AkazeImageFinder {
             InputStream stdin = proc.getInputStream();
             InputStreamReader isr = new InputStreamReader(stdin);
             BufferedReader br = new BufferedReader(isr);
-            while ((br.readLine()) != null)
-                System.out.print("");
+            String line;
+            while ((line = br.readLine()) != null)
+                logger.info(line);
             int exitVal = proc.waitFor();
             if (exitVal != 0)
                 logger.info("Akaze matching process exited with value: " + exitVal);
