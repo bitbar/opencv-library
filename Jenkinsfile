@@ -4,7 +4,7 @@ node('linux && maven && gpg') {
     ansiColor('xterm') {
         stage('Checkout') {
             git([
-                url: 'git@github.com:bitbar/opencv-library.git',
+                url: 'https://github.com/bitbar/opencv-library.git',
                 branch: env.BRANCH_NAME,
                 poll: true
             ])
